@@ -1,16 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { X, Eye, Youtube } from "lucide-react"
+import type { Difficulty, QAItem } from "@/lib/types"
+import { Eye, X, Youtube } from "lucide-react"
+import { useEffect, useState } from "react"
+import { MarkdownRenderer } from "./markdown-renderer"
+import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
-import { Textarea } from "./ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-import { Badge } from "./ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
-import { MarkdownRenderer } from "./markdown-renderer"
-import type { QAItem, Difficulty } from "@/lib/types"
+import { Textarea } from "./ui/textarea"
 
 interface QAEditorProps {
   item?: QAItem
@@ -76,7 +76,7 @@ export function QAEditor({ item, topicId, onSave, onCancel }: QAEditorProps) {
 
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-auto">
-      <div className="container max-w-screen-xl py-6">
+      <div className="page-container">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold">{item ? "Edit Q&A" : "New Q&A"}</h2>

@@ -1,12 +1,12 @@
 "use client"
 
-import { X, Edit3, Copy, History } from "lucide-react"
-import { Button } from "./ui/button"
-import { Badge } from "./ui/badge"
-import { LanguageBadge } from "./language-badge"
-import { CodePreview } from "./code-preview"
-import type { Snippet } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
+import type { Snippet } from "@/lib/types"
+import { Copy, Edit3, History, X } from "lucide-react"
+import { CodePreview } from "./code-preview"
+import { LanguageBadge } from "./language-badge"
+import { Badge } from "./ui/badge"
+import { Button } from "./ui/button"
 
 interface SnippetViewerProps {
   snippet: Snippet
@@ -27,7 +27,7 @@ export function SnippetViewer({ snippet, onClose, onEdit }: SnippetViewerProps) 
 
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-auto">
-      <div className="container max-w-screen-xl py-6">
+      <div className="page-container">
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">

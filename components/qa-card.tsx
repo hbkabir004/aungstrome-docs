@@ -1,12 +1,12 @@
 "use client"
 
-import { FileText, MoreVertical, Pencil, Trash2, ExternalLink } from "lucide-react"
-import { Card, CardHeader, CardTitle, CardContent } from "./ui/card"
-import { Button } from "./ui/button"
-import { Badge } from "./ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
-import { DifficultyBadge } from "./difficulty-badge"
 import type { QAItem } from "@/lib/types"
+import { ExternalLink, FileText, MoreVertical, Pencil, Trash2 } from "lucide-react"
+import { DifficultyBadge } from "./difficulty-badge"
+import { Badge } from "./ui/badge"
+import { Button } from "./ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
 
 interface QACardProps {
   item: QAItem

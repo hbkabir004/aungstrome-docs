@@ -129,9 +129,9 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="page-container">
+      <main className="page-container px-2 sm:px-4 md:px-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 flex flex-col gap-1 sm:gap-0">
           <h1 className="text-3xl font-bold tracking-tight mb-2">Search</h1>
           <p className="text-muted-foreground">Search across all your Q&A items and code snippets</p>
         </div>
@@ -144,15 +144,15 @@ export default function SearchPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by title, content, tags..."
-              className="pl-10 h-12 text-base"
+              className="pl-10 h-12 text-base w-full"
             />
           </div>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="flex flex-wrap gap-3 mb-6 overflow-x-auto pb-2 -mx-2 px-2">
           <Select value={selectedTopic} onValueChange={setSelectedTopic}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-48 min-w-[10rem]">
               <SelectValue placeholder="All Topics" />
             </SelectTrigger>
             <SelectContent>
@@ -263,7 +263,7 @@ export default function SearchPage() {
             <p className="text-sm text-muted-foreground">Try adjusting your search query or filters</p>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {results.map((result) => {
               const topic = topics.find((t) => t.id === result.topicId)
               return (

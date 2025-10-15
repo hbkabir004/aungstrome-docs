@@ -1,15 +1,8 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { Plus, ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { NavHeader } from "@/components/nav-header"
-import { SnippetCard } from "@/components/snippet-card"
-import { SnippetEditor } from "@/components/snippet-editor"
-import { SnippetViewer } from "@/components/snippet-viewer"
-import { useTopics, useSnippets } from "@/hooks/use-data"
-import type { Snippet } from "@/lib/types"
+import { SnippetCard } from "@/components/snippet-card";
+import { SnippetEditor } from "@/components/snippet-editor";
+import { SnippetViewer } from "@/components/snippet-viewer";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,42 +12,49 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { useSnippets, useTopics } from "@/hooks/use-data";
+import type { Snippet } from "@/lib/types";
+import { ArrowLeft, Plus } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function TopicSnippetsPage() {
-  const params = useParams()
-  const router = useRouter()
-  const topicId = params.topicId as string
+  const params = useParams();
+  const router = useRouter();
+  const topicId = params.topicId as string;
 
-  const { topics } = useTopics()
-  const { snippets, createSnippet, updateSnippet, deleteSnippet } = useSnippets(topicId)
+  const { topics } = useTopics();
+  const { snippets, createSnippet, updateSnippet, deleteSnippet } =
+    useSnippets(topicId);
 
-  const [editingSnippet, setEditingSnippet] = useState<Snippet | undefined>()
-  const [viewingSnippet, setViewingSnippet] = useState<Snippet | undefined>()
-  const [deletingSnippet, setDeletingSnippet] = useState<Snippet | undefined>()
-  const [isCreating, setIsCreating] = useState(false)
+  const [editingSnippet, setEditingSnippet] = useState<Snippet | undefined>();
+  const [viewingSnippet, setViewingSnippet] = useState<Snippet | undefined>();
+  const [deletingSnippet, setDeletingSnippet] = useState<Snippet | undefined>();
+  const [isCreating, setIsCreating] = useState(false);
 
-  const topic = topics.find((t) => t.id === topicId)
+  const topic = topics.find((t) => t.id === topicId);
 
   const handleSave = async (snippet: Snippet) => {
     if (editingSnippet) {
-      await updateSnippet(snippet)
+      await updateSnippet(snippet);
     } else {
-      await createSnippet(snippet)
+      await createSnippet(snippet);
     }
-    setEditingSnippet(undefined)
-    setIsCreating(false)
-  }
+    setEditingSnippet(undefined);
+    setIsCreating(false);
+  };
 
   const handleDelete = async () => {
     if (deletingSnippet) {
-      await deleteSnippet(deletingSnippet.id)
-      setDeletingSnippet(undefined)
+      await deleteSnippet(deletingSnippet.id);
+      setDeletingSnippet(undefined);
       if (viewingSnippet?.id === deletingSnippet.id) {
-        setViewingSnippet(undefined)
+        setViewingSnippet(undefined);
       }
     }
-  }
+  };
 
   if (isCreating || editingSnippet) {
     return (
@@ -63,11 +63,11 @@ export default function TopicSnippetsPage() {
         topicId={topicId}
         onSave={handleSave}
         onCancel={() => {
-          setEditingSnippet(undefined)
-          setIsCreating(false)
+          setEditingSnippet(undefined);
+          setIsCreating(false);
         }}
       />
-    )
+    );
   }
 
   if (viewingSnippet) {
@@ -76,26 +76,31 @@ export default function TopicSnippetsPage() {
         snippet={viewingSnippet}
         onClose={() => setViewingSnippet(undefined)}
         onEdit={() => {
-          setEditingSnippet(viewingSnippet)
-          setViewingSnippet(undefined)
+          setEditingSnippet(viewingSnippet);
+          setViewingSnippet(undefined);
         }}
       />
-    )
+    );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <NavHeader />
-      <main className="container max-w-screen-2xl py-8">
+      <main className="page-container">
         {/* Header */}
         <div className="mb-8">
-          <Button variant="ghost" onClick={() => router.push("/")} className="mb-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/")}
+            className="mb-4"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Topics
           </Button>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">{topic?.name || "Topic"}</h1>
+              <h1 className="text-3xl font-bold tracking-tight">
+                {topic?.name || "Topic"}
+              </h1>
               <p className="text-muted-foreground mt-1">Code Snippets</p>
             </div>
             <Button onClick={() => setIsCreating(true)}>
@@ -129,12 +134,16 @@ export default function TopicSnippetsPage() {
         )}
       </main>
 
-      <AlertDialog open={!!deletingSnippet} onOpenChange={(open) => !open && setDeletingSnippet(undefined)}>
+      <AlertDialog
+        open={!!deletingSnippet}
+        onOpenChange={(open) => !open && setDeletingSnippet(undefined)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Snippet</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deletingSnippet?.title}"? This action cannot be undone.
+              Are you sure you want to delete "{deletingSnippet?.title}"? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -149,5 +158,5 @@ export default function TopicSnippetsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

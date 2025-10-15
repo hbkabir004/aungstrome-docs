@@ -1,15 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { Plus, ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { NavHeader } from "@/components/nav-header"
 import { QACard } from "@/components/qa-card"
 import { QAEditor } from "@/components/qa-editor"
 import { QAViewer } from "@/components/qa-viewer"
-import { useTopics, useQAItems } from "@/hooks/use-data"
-import type { QAItem } from "@/lib/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +13,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { useQAItems, useTopics } from "@/hooks/use-data"
+import type { QAItem } from "@/lib/types"
+import { ArrowLeft, Plus } from "lucide-react"
+import { useParams, useRouter } from "next/navigation"
+import { useState } from "react"
 
 export default function TopicQAPage() {
   const params = useParams()
@@ -85,8 +84,7 @@ export default function TopicQAPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavHeader />
-      <main className="container max-w-screen-2xl py-8">
+      <main className="page-container">
         {/* Header */}
         <div className="mb-8">
           <Button variant="ghost" onClick={() => router.push("/")} className="mb-4">

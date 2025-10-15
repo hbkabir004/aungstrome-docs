@@ -1,12 +1,12 @@
 "use client"
 
-import { X, Youtube, StickyNote, Edit3 } from "lucide-react"
-import { Button } from "./ui/button"
-import { Badge } from "./ui/badge"
-import { Separator } from "./ui/separator"
+import type { QAItem } from "@/lib/types"
+import { Edit3, StickyNote, X, Youtube } from "lucide-react"
 import { DifficultyBadge } from "./difficulty-badge"
 import { MarkdownRenderer } from "./markdown-renderer"
-import type { QAItem } from "@/lib/types"
+import { Badge } from "./ui/badge"
+import { Button } from "./ui/button"
+import { Separator } from "./ui/separator"
 
 interface QAViewerProps {
   item: QAItem
@@ -17,7 +17,7 @@ interface QAViewerProps {
 export function QAViewer({ item, onClose, onEdit }: QAViewerProps) {
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-auto">
-      <div className="container max-w-screen-lg py-6">
+      <div className="page-container">
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">

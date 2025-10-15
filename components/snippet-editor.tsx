@@ -1,18 +1,18 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { X, Eye, History, RotateCcw, Copy } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import type { Snippet, SnippetLanguage, SnippetRevision } from "@/lib/types"
+import { Copy, Eye, History, RotateCcw, X } from "lucide-react"
+import { useEffect, useState } from "react"
+import { CodePreview } from "./code-preview"
+import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
-import { Textarea } from "./ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-import { Badge } from "./ui/badge"
-import { CodePreview } from "./code-preview"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog"
 import { ScrollArea } from "./ui/scroll-area"
-import type { Snippet, SnippetLanguage, SnippetRevision } from "@/lib/types"
-import { useToast } from "@/hooks/use-toast"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
+import { Textarea } from "./ui/textarea"
 
 interface SnippetEditorProps {
   snippet?: Snippet
@@ -100,7 +100,7 @@ export function SnippetEditor({ snippet, topicId, onSave, onCancel }: SnippetEdi
 
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-auto">
-      <div className="container max-w-screen-2xl py-6">
+      <div className="page-container">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold">{snippet ? "Edit Snippet" : "New Snippet"}</h2>

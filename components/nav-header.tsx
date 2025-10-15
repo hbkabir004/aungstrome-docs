@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { BookOpen, Code2, Home, Search, Settings } from "lucide-react"
+import { BookOpen, Home, Search, Settings } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ThemeToggle } from "./theme-toggle"
@@ -13,7 +13,7 @@ export function NavHeader() {
   const navItems = [
     { href: "/", label: "Home", icon: Home },
     // { href: "/topics", label: "Topics", icon: BookOpen },
-    { href: "/snippets", label: "Snippets", icon: Code2 },
+    // { href: "/snippets", label: "Snippets", icon: Code2 },
     { href: "/search", label: "Search", icon: Search },
     { href: "/settings", label: "Settings", icon: Settings },
   ]

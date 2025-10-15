@@ -82,7 +82,7 @@ export default function HomePage() {
             Interview Preparation Docs
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl">
-            Your personal knowledge base for technical interviews. Store Q&A,
+            My personal knowledge base for technical interviews. Store Q&A,
             code snippets, and notes with interactive previews.
           </p>
         </div>
@@ -131,8 +131,8 @@ export default function HomePage() {
               <Link href="/search">
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="w-full bg-transparent"
+                  size="lg"
+                  className="w-full bg-transparent hover:bg-accent-foreground hover:text-cyan-500"
                 >
                   Search All
                 </Button>
