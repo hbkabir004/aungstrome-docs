@@ -54,7 +54,24 @@ export interface AppData {
 
 export type StorageBackend = "indexeddb" | "localstorage"
 
+export interface GoogleDriveConfig {
+  accessToken: string
+  refreshToken?: string
+  expiresAt: number
+  email: string
+  fileId?: string // ID of the backup file in Google Drive
+}
+
+export interface SyncStatus {
+  lastSyncAt?: number
+  isSyncing: boolean
+  error?: string
+}
+
 export interface AppSettings {
   storageBackend: StorageBackend
   theme: "light" | "dark" | "system"
+  googleDrive?: GoogleDriveConfig
+  autoSync: boolean
+  syncInterval: number // in minutes
 }

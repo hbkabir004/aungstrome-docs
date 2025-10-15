@@ -23,10 +23,12 @@ A personal documentation app for interview preparation built with Next.js, TypeS
   - Export/import data as JSON
   - Switch between IndexedDB and LocalStorage
   - Clear all data option
+  - **Google Drive Sync**: Automatic backup and synchronization to your personal Google Drive
 
 ### Technical Features
 - **Offline-First**: PWA with service worker for offline access
 - **Client-Side Storage**: IndexedDB (default) or LocalStorage
+- **Cloud Backup**: Secure Google Drive integration with OAuth 2.0
 - **Dark/Light Theme**: System-aware theme with manual toggle
 - **Responsive Design**: Works on desktop and mobile devices
 - **Markdown Rendering**: Full GitHub Flavored Markdown support with syntax highlighting
@@ -36,6 +38,7 @@ A personal documentation app for interview preparation built with Next.js, TypeS
 
 ### Prerequisites
 - Node.js 18+ or compatible package manager (npm, yarn, pnpm)
+- (Optional) Google Cloud Project for Google Drive sync
 
 ### Installation
 
@@ -50,7 +53,12 @@ yarn install
 pnpm install
 \`\`\`
 
-3. Run the development server:
+3. (Optional) Configure Google Drive API:
+   - Copy `.env.local.example` to `.env.local`
+   - Follow the Google Drive Setup section below
+   - Add your credentials to `.env.local`
+
+4. Run the development server:
 
 \`\`\`bash
 npm run dev
@@ -60,7 +68,35 @@ yarn dev
 pnpm dev
 \`\`\`
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+### Google Drive Setup (Optional)
+
+To enable Google Drive sync:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Google Drive API:
+   - Navigate to "APIs & Services" → "Library"
+   - Search for "Google Drive API"
+   - Click "Enable"
+4. Create OAuth 2.0 credentials:
+   - Go to "APIs & Services" → "Credentials"
+   - Click "Create Credentials" → "OAuth client ID"
+   - Choose "Web application"
+   - Add authorized JavaScript origins:
+     - `http://localhost:3000` (development)
+     - Your production URL (e.g., `https://yourdomain.com`)
+   - Add authorized redirect URIs (same as origins)
+   - Click "Create"
+5. Create an API Key:
+   - Click "Create Credentials" → "API Key"
+   - (Optional) Restrict the key to Google Drive API
+6. Copy credentials to `.env.local`:
+   \`\`\`
+   NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
+   NEXT_PUBLIC_GOOGLE_API_KEY=your_api_key
+   \`\`\`
 
 ### Building for Production
 
@@ -75,7 +111,10 @@ npm start
 
 1. Push your code to GitHub
 2. Import the project in [Vercel](https://vercel.com)
-3. Deploy with default settings
+3. Add environment variables in project settings:
+   - `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
+   - `NEXT_PUBLIC_GOOGLE_API_KEY`
+4. Deploy with default settings
 
 ### Other Platforms
 
@@ -84,6 +123,8 @@ This is a standard Next.js app and can be deployed to any platform that supports
 - Railway
 - Render
 - Self-hosted with Node.js
+
+**Important:** Add the production URL to Google Cloud Console authorized origins and redirect URIs.
 
 ## Usage Guide
 
@@ -114,6 +155,37 @@ This is a standard Next.js app and can be deployed to any platform that supports
 1. Use the Search page to find content across all topics
 2. Apply filters for topic, type, difficulty, or language
 3. Sort results by relevance, date, or alphabetically
+
+### Google Drive Sync
+
+**Connecting:**
+1. Go to Settings → Google Drive Sync
+2. Click "Connect Google Drive"
+3. Sign in with your Google account
+4. Grant permissions (only accesses the backup file)
+5. Initial sync will merge local and cloud data
+
+**Automatic Sync:**
+1. Enable "Automatic Sync" toggle
+2. Choose sync interval (15 min to 6 hours)
+3. Data syncs automatically in the background
+
+**Manual Operations:**
+- **Sync Now**: Merges local and cloud data, keeping latest versions
+- **Upload Backup**: Overwrites cloud with current local data
+- **Restore Backup**: Replaces local data with cloud backup
+
+**How Sync Works:**
+- Merge strategy: Keeps items with latest `updatedAt` timestamp
+- Conflict resolution: Automatic based on modification time
+- Privacy: Data stored in your personal Google Drive only
+- Security: OAuth 2.0 authentication, no third-party access
+
+**Disconnecting:**
+1. Click the disconnect icon
+2. Confirm disconnection
+3. Local data remains intact
+4. Cloud backup remains in your Google Drive
 
 ### Import/Export
 
@@ -162,18 +234,22 @@ aungstrome-docs/
 │   ├── nav-header.tsx       # Navigation
 │   ├── qa-*.tsx            # Q&A components
 │   ├── snippet-*.tsx       # Snippet components
+│   ├── google-drive-sync.tsx # Google Drive UI
 │   └── markdown-renderer.tsx
 ├── lib/                     # Core logic
 │   ├── types.ts            # TypeScript types
 │   ├── storage/            # Storage implementations
 │   │   ├── indexeddb.ts   # IndexedDB wrapper
 │   │   ├── localstorage.ts # LocalStorage wrapper
+│   │   ├── settings.ts    # Settings storage
 │   │   └── index.ts       # Storage abstraction
+│   ├── google-drive.ts     # Google Drive API integration
 │   ├── search.ts           # Fuse.js search logic
 │   ├── seed-data.ts        # Initial sample data
 │   └── init-data.ts        # Data initialization
 ├── hooks/                   # Custom React hooks
-│   └── use-data.ts         # SWR data fetching hooks
+│   ├── use-data.ts         # SWR data fetching hooks
+│   └── use-google-drive-sync.ts # Google Drive sync hook
 └── public/                  # Static assets
     ├── manifest.json        # PWA manifest
     └── icons/              # App icons
@@ -185,6 +261,7 @@ aungstrome-docs/
 - **TypeScript**: Type-safe development
 - **Tailwind CSS v4**: Utility-first styling
 - **IndexedDB (idb)**: Client-side database
+- **Google Drive API**: Cloud backup and sync
 - **Fuse.js**: Fuzzy search
 - **Sandpack**: Interactive code previews
 - **react-markdown**: Markdown rendering
@@ -214,24 +291,26 @@ aungstrome-docs/
 - Export/import uses local file system only
 - No authentication required (single-user app)
 
-### Limitations
+### Google Drive Security
 
-- Code previews cannot make network requests
-- No server-side code execution
-- Limited to browser-available APIs
-- Sandpack bundle size adds ~2MB to initial load
+- **OAuth 2.0**: Industry-standard authentication
+- **Scoped Access**: Only accesses the backup file created by the app
+- **No Third-Party Access**: Data never shared with external services
+- **Encrypted Storage**: Google Drive provides encryption at rest
+- **Token Management**: Access tokens stored locally, expire automatically
+- **Privacy First**: Your data remains in your personal Google Drive
 
 ## Future Enhancements
 
 ### Planned Features
 - GitHub Gist sync for backup
-- Google Drive integration
 - Keyboard shortcuts (Cmd/Ctrl+K for search, etc.)
 - Drag-and-drop reordering
 - Bulk operations (delete multiple items)
 - Tag management UI
 - Deep linking to specific items
 - Export to PDF or Markdown
+- Conflict resolution UI for manual merge
 
 ### Contributing
 
@@ -254,6 +333,27 @@ This is a personal project template. Feel free to fork and customize for your ne
 - Check for syntax errors in JSON
 - Ensure file contains topics, qaItems, and snippets arrays
 
+**Google Drive sync issues:**
+- Check if access token expired (reconnect if needed)
+- Verify environment variables are set correctly
+- Ensure Google Drive API is enabled in Cloud Console
+- Check authorized origins match your deployment URL
+- Look for errors in browser console
+
+**"Access token expired" error:**
+- Click disconnect and reconnect Google Drive
+- Tokens expire after ~1 hour for security
+- Reconnecting generates a new token
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Optional | Google OAuth 2.0 Client ID for Drive sync |
+| `NEXT_PUBLIC_GOOGLE_API_KEY` | Optional | Google API Key for Drive API access |
+
+**Note:** Google Drive sync is optional. The app works fully without these variables.
+
 ## License
 
 MIT License - feel free to use this project for personal or commercial purposes.
@@ -264,3 +364,4 @@ MIT License - feel free to use this project for personal or commercial purposes.
 - UI components from [shadcn/ui](https://ui.shadcn.com)
 - Code previews powered by [Sandpack](https://sandpack.codesandbox.io)
 - Icons from [Lucide](https://lucide.dev)
+- Google Drive API for cloud sync
