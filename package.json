@@ -29,7 +29,7 @@
     "clsx": "^2.1.1",
     "fuse.js": "latest",
     "geist": "latest",
-    "googleapis": "latest",
+    "googleapis": "162.0.0",
     "highlight.js": "latest",
     "idb": "latest",
     "lucide-react": "^0.454.0",

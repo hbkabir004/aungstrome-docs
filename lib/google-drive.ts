@@ -1,6 +1,26 @@
-// Google Drive API integration for backup and sync
+// Google Drive API integration for backup and sync (browser-based)
 import type { AppData, GoogleDriveConfig, SyncStatus } from "./types"
-import { google } from "googleapis"
+
+// Browser-based Google API types
+declare global {
+  interface Window {
+    gapi: any
+    google: {
+      accounts: {
+        oauth2: {
+          initTokenClient: (config: {
+            client_id: string
+            scope: string
+            callback: (response: any) => void
+          }) => {
+            callback: (response: any) => void
+            requestAccessToken: (options: { prompt: string }) => void
+          }
+        }
+      }
+    }
+  }
+}
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""
 const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || ""
@@ -10,7 +30,7 @@ const BACKUP_FILENAME = "aungstrome-docs-backup.json"
 
 let gapiInited = false
 let gisInited = false
-let tokenClient: google.accounts.oauth2.TokenClient | null = null
+let tokenClient: any = null
 let gapi: any = null
 
 // Initialize Google API
@@ -46,10 +66,10 @@ export async function initGoogleAPI(): Promise<void> {
     gisScript.async = true
     gisScript.defer = true
     gisScript.onload = () => {
-      tokenClient = google.accounts.oauth2.initTokenClient({
+      tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: SCOPES,
-        callback: "", // Will be set during auth
+        callback: () => {}, // Will be set during auth
       })
       gisInited = true
       if (gapiInited) resolve()
@@ -70,7 +90,7 @@ export async function authenticateGoogleDrive(): Promise<GoogleDriveConfig> {
       return
     }
 
-    tokenClient.callback = async (response: google.accounts.oauth2.TokenResponse) => {
+    tokenClient.callback = async (response: any) => {
       if (response.error) {
         reject(new Error(response.error))
         return
