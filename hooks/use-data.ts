@@ -7,7 +7,9 @@ import type { Topic, QAItem, Snippet } from "@/lib/types"
 
 // Topics
 export function useTopics() {
-  const { data, error, mutate } = useSWR("topics", storage.getAllTopics)
+  const { data, error, mutate } = useSWR("topics", storage.getAllTopics, {
+    fallbackData: [],
+  })
 
   const createTopic = useCallback(
     async (topic: Topic) => {
@@ -48,7 +50,9 @@ export function useTopics() {
 export function useQAItems(topicId?: string) {
   const fetcher = topicId ? () => storage.getQAItemsByTopic(topicId) : storage.getAllQAItems
 
-  const { data, error, mutate } = useSWR(topicId ? `qaItems-${topicId}` : "qaItems", fetcher)
+  const { data, error, mutate } = useSWR(topicId ? `qaItems-${topicId}` : "qaItems", fetcher, {
+    fallbackData: [],
+  })
 
   const createQAItem = useCallback(
     async (item: QAItem) => {
@@ -89,7 +93,9 @@ export function useQAItems(topicId?: string) {
 export function useSnippets(topicId?: string) {
   const fetcher = topicId ? () => storage.getSnippetsByTopic(topicId) : storage.getAllSnippets
 
-  const { data, error, mutate } = useSWR(topicId ? `snippets-${topicId}` : "snippets", fetcher)
+  const { data, error, mutate } = useSWR(topicId ? `snippets-${topicId}` : "snippets", fetcher, {
+    fallbackData: [],
+  })
 
   const createSnippet = useCallback(
     async (snippet: Snippet) => {
