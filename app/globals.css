@@ -127,4 +127,8 @@
   code {
     @apply font-mono text-sm;
   }
+
+  .page-container{
+    @apply container max-w-screen-2xl mx-auto py-8 px-5 sm:px-0
+  }
 }

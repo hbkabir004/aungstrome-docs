@@ -1,18 +1,18 @@
 "use client"
 
+import { cn } from "@/lib/utils"
+import { BookOpen, Code2, Home, Search, Settings } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Search, Settings, BookOpen, Code2, Home } from "lucide-react"
 import { ThemeToggle } from "./theme-toggle"
 import { Button } from "./ui/button"
-import { cn } from "@/lib/utils"
 
 export function NavHeader() {
   const pathname = usePathname()
 
   const navItems = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/topics", label: "Topics", icon: BookOpen },
+    // { href: "/topics", label: "Topics", icon: BookOpen },
     { href: "/snippets", label: "Snippets", icon: Code2 },
     { href: "/search", label: "Search", icon: Search },
     { href: "/settings", label: "Settings", icon: Settings },
@@ -20,8 +20,8 @@ export function NavHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 max-w-screen-2xl items-center">
-        <div className="mr-4 flex">
+      <div className="container flex h-16 max-w-screen-2xl mx-auto items-center">
+        <div className="mx-4 sm:mx-0 mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <BookOpen className="h-6 w-6" />
             <span className="hidden font-bold sm:inline-block">Aungstrome Docs</span>

@@ -1,16 +1,7 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { Plus, BookOpen, FileText, Code2, SearchIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { NavHeader } from "@/components/nav-header"
-import { TopicCard } from "@/components/topic-card"
-import { TopicDialog } from "@/components/topic-dialog"
-import { useTopics, useQAItems, useSnippets } from "@/hooks/use-data"
-import { initializeDataIfNeeded } from "@/lib/init-data"
-import type { Topic } from "@/lib/types"
+import { TopicCard } from "@/components/topic-card";
+import { TopicDialog } from "@/components/topic-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,43 +11,53 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQAItems, useSnippets, useTopics } from "@/hooks/use-data";
+import { initializeDataIfNeeded } from "@/lib/init-data";
+import type { Topic } from "@/lib/types";
+import { BookOpen, Code2, FileText, Plus, SearchIcon } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function HomePage() {
-  const [initialized, setInitialized] = useState(false)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingTopic, setEditingTopic] = useState<Topic | undefined>()
-  const [deletingTopic, setDeletingTopic] = useState<Topic | undefined>()
+  const [initialized, setInitialized] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingTopic, setEditingTopic] = useState<Topic | undefined>();
+  const [deletingTopic, setDeletingTopic] = useState<Topic | undefined>();
 
-  const { topics, createTopic, updateTopic, deleteTopic } = useTopics()
-  const { qaItems } = useQAItems()
-  const { snippets } = useSnippets()
+  const { topics, createTopic, updateTopic, deleteTopic } = useTopics();
+  const { qaItems } = useQAItems();
+  const { snippets } = useSnippets();
 
   useEffect(() => {
-    initializeDataIfNeeded().then(() => setInitialized(true))
-  }, [])
+    initializeDataIfNeeded().then(() => setInitialized(true));
+  }, []);
 
   const handleSaveTopic = async (topic: Topic) => {
     if (editingTopic) {
-      await updateTopic(topic)
+      await updateTopic(topic);
     } else {
-      await createTopic(topic)
+      await createTopic(topic);
     }
-    setEditingTopic(undefined)
-  }
+    setEditingTopic(undefined);
+  };
 
   const handleDeleteTopic = async () => {
     if (deletingTopic) {
-      await deleteTopic(deletingTopic.id)
-      setDeletingTopic(undefined)
+      await deleteTopic(deletingTopic.id);
+      setDeletingTopic(undefined);
     }
-  }
+  };
 
   const getTopicCounts = (topicId: string) => {
-    const qaCount = qaItems.filter((item) => item.topicId === topicId).length
-    const snippetCount = snippets.filter((snippet) => snippet.topicId === topicId).length
-    return { qaCount, snippetCount }
-  }
+    const qaCount = qaItems.filter((item) => item.topicId === topicId).length;
+    const snippetCount = snippets.filter(
+      (snippet) => snippet.topicId === topicId
+    ).length;
+    return { qaCount, snippetCount };
+  };
 
   if (!initialized) {
     return (
@@ -66,27 +67,28 @@ export default function HomePage() {
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
-  const totalQA = qaItems.length
-  const totalSnippets = snippets.length
+  const totalQA = qaItems.length;
+  const totalSnippets = snippets.length;
 
   return (
     <div className="min-h-screen bg-background">
-      <NavHeader />
-      <main className="container max-w-screen-2xl py-8">
+      <main className="page-container">
         {/* Hero Section */}
         <div className="mb-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-3">Interview Preparation Docs</h1>
+          <h1 className="text-4xl font-bold tracking-tight mb-3">
+            Interview Preparation Docs
+          </h1>
           <p className="text-xl text-muted-foreground max-w-2xl">
-            Your personal knowledge base for technical interviews. Store Q&A, code snippets, and notes with interactive
-            previews.
+            Your personal knowledge base for technical interviews. Store Q&A,
+            code snippets, and notes with interactive previews.
           </p>
         </div>
 
         {/* Stats */}
-        <div className="grid gap-4 md:grid-cols-4 mb-8">
+        <div className="grid gap-4 md:grid-cols-3 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Topics</CardTitle>
@@ -107,21 +109,31 @@ export default function HomePage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Code Snippets</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Code Snippets
+              </CardTitle>
               <Code2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalSnippets}</div>
             </CardContent>
           </Card>
+        </div>
+        <div className="grid gap-4 md:grid-cols-1 my-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Quick Actions
+              </CardTitle>
               <SearchIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <Link href="/search">
-                <Button variant="outline" size="sm" className="w-full bg-transparent">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full bg-transparent"
+                >
                   Search All
                 </Button>
               </Link>
@@ -134,12 +146,14 @@ export default function HomePage() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight">Topics</h2>
-              <p className="text-sm text-muted-foreground mt-1">Organize your interview preparation by topic</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Organize your interview preparation by topic
+              </p>
             </div>
             <Button
               onClick={() => {
-                setEditingTopic(undefined)
-                setDialogOpen(true)
+                setEditingTopic(undefined);
+                setDialogOpen(true);
               }}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -152,7 +166,9 @@ export default function HomePage() {
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No topics yet</h3>
-                <p className="text-sm text-muted-foreground mb-4">Create your first topic to get started</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Create your first topic to get started
+                </p>
                 <Button onClick={() => setDialogOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />
                   Create Topic
@@ -162,7 +178,7 @@ export default function HomePage() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {topics.map((topic) => {
-                const { qaCount, snippetCount } = getTopicCounts(topic.id)
+                const { qaCount, snippetCount } = getTopicCounts(topic.id);
                 return (
                   <TopicCard
                     key={topic.id}
@@ -170,27 +186,35 @@ export default function HomePage() {
                     qaCount={qaCount}
                     snippetCount={snippetCount}
                     onEdit={() => {
-                      setEditingTopic(topic)
-                      setDialogOpen(true)
+                      setEditingTopic(topic);
+                      setDialogOpen(true);
                     }}
                     onDelete={() => setDeletingTopic(topic)}
                   />
-                )
+                );
               })}
             </div>
           )}
         </div>
       </main>
 
-      <TopicDialog open={dialogOpen} onOpenChange={setDialogOpen} topic={editingTopic} onSave={handleSaveTopic} />
+      <TopicDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        topic={editingTopic}
+        onSave={handleSaveTopic}
+      />
 
-      <AlertDialog open={!!deletingTopic} onOpenChange={(open) => !open && setDeletingTopic(undefined)}>
+      <AlertDialog
+        open={!!deletingTopic}
+        onOpenChange={(open) => !open && setDeletingTopic(undefined)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Topic</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deletingTopic?.name}"? This will not delete the Q&A items and snippets
-              associated with this topic.
+              Are you sure you want to delete "{deletingTopic?.name}"? This will
+              not delete the Q&A items and snippets associated with this topic.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -205,5 +229,5 @@ export default function HomePage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

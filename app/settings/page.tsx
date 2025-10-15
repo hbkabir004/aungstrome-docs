@@ -2,16 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { Download, Upload, Trash2, Database, Github, Cloud, AlertCircle, CheckCircle2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { NavHeader } from "@/components/nav-header"
-import { useTopics, useQAItems, useSnippets } from "@/hooks/use-data"
-import { exportData, importData, clearAllData, setStorageBackend, getStorageBackend } from "@/lib/storage"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { StorageBackend } from "@/lib/types"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,8 +13,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useQAItems, useSnippets, useTopics } from "@/hooks/use-data"
 import { useToast } from "@/hooks/use-toast"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { clearAllData, exportData, getStorageBackend, importData, setStorageBackend } from "@/lib/storage"
+import type { StorageBackend } from "@/lib/types"
+import { AlertCircle, CheckCircle2, Cloud, Database, Download, Github, Trash2, Upload } from "lucide-react"
+import { useState } from "react"
 
 export default function SettingsPage() {
   const { toast } = useToast()
@@ -136,8 +135,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavHeader />
-      <main className="container max-w-screen-lg py-8">
+      <main className="page-container">
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight mb-2">Settings</h1>
           <p className="text-muted-foreground">Manage your app settings and data</p>

@@ -1,21 +1,20 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { Search, Filter, X } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { NavHeader } from "@/components/nav-header"
-import { SearchResultCard } from "@/components/search-result-card"
 import { QAViewer } from "@/components/qa-viewer"
+import { SearchResultCard } from "@/components/search-result-card"
 import { SnippetViewer } from "@/components/snippet-viewer"
-import { useTopics, useQAItems, useSnippets } from "@/hooks/use-data"
-import { searchAll } from "@/lib/search"
-import type { QAItem, Snippet, Difficulty, SnippetLanguage } from "@/lib/types"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useQAItems, useSnippets, useTopics } from "@/hooks/use-data"
+import { searchAll } from "@/lib/search"
+import type { Difficulty, QAItem, Snippet, SnippetLanguage } from "@/lib/types"
+import { Filter, Search, X } from "lucide-react"
+import { useMemo, useState } from "react"
 
 type SortOption = "relevance" | "recent" | "oldest" | "alphabetical"
 
@@ -130,8 +129,7 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavHeader />
-      <main className="container max-w-screen-2xl py-8">
+      <main className="page-container">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight mb-2">Search</h1>

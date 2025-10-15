@@ -1,14 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { NavHeader } from "@/components/nav-header"
 import { SnippetCard } from "@/components/snippet-card"
 import { SnippetEditor } from "@/components/snippet-editor"
 import { SnippetViewer } from "@/components/snippet-viewer"
-import { useSnippets, useTopics } from "@/hooks/use-data"
-import type { Snippet } from "@/lib/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +13,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useSnippets, useTopics } from "@/hooks/use-data"
+import type { Snippet } from "@/lib/types"
+import { Plus } from "lucide-react"
+import { useState } from "react"
 
 export default function SnippetsPage() {
   const { topics } = useTopics()
@@ -83,8 +82,7 @@ export default function SnippetsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavHeader />
-      <main className="container max-w-screen-2xl py-8">
+      <main className="page-container">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
