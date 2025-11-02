@@ -2,6 +2,7 @@
 
 import type React from "react"
 
+import { GoogleDriveSync } from "@/components/google-drive-sync"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   AlertDialog,
@@ -23,7 +24,6 @@ import { clearAllData, exportData, getStorageBackend, importData, setStorageBack
 import type { StorageBackend } from "@/lib/types"
 import { AlertCircle, CheckCircle2, Cloud, Database, Download, Github, Trash2, Upload } from "lucide-react"
 import { useState } from "react"
-import { GoogleDriveSync } from "@/components/google-drive-sync"
 
 export default function SettingsPage() {
   const { toast } = useToast()

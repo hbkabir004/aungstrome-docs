@@ -105,7 +105,7 @@ export function GoogleDriveSync() {
               </AlertDescription>
             </Alert>
 
-            <Button onClick={handleConnect} className="w-full">
+            <Button onClick={handleConnect} className="w-full cursor-pointer">
               <Cloud className="mr-2 h-4 w-4" />
               Connect Google Drive
             </Button>
