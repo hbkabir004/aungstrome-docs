@@ -12,6 +12,18 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  async headers() {
+    // Disable COOP globally to avoid window.opener being blocked for Google auth popups
+    // If you prefer, scope this to specific routes instead of /(.*)
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "Cross-Origin-Opener-Policy", value: "unsafe-none" },
+        ],
+      },
+    ]
+  },
 }
 
 export default withPWA({

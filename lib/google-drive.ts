@@ -24,7 +24,8 @@ declare global {
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""
 const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || ""
-const SCOPES = "https://www.googleapis.com/auth/drive.file"
+// Include user identity scopes so we can fetch email reliably
+const SCOPES = "openid email profile https://www.googleapis.com/auth/drive.file"
 const DISCOVERY_DOC = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"
 const BACKUP_FILENAME = "aungstrome-docs-backup.json"
 
@@ -97,15 +98,23 @@ export async function authenticateGoogleDrive(): Promise<GoogleDriveConfig> {
       }
 
       try {
-        // Get user info
-        const userInfo = await gapi.client.request({
-          path: "https://www.googleapis.com/oauth2/v2/userinfo",
+        // Set access token before any authenticated requests
+        setAccessToken(response.access_token)
+
+        // Get user info using OAuth bearer token (avoid API key-only requests)
+        const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+          headers: { Authorization: `Bearer ${response.access_token}` },
         })
+        if (!userInfoRes.ok) {
+          const errText = await userInfoRes.text()
+          throw new Error(`Failed to fetch user info: ${userInfoRes.status} ${errText}`)
+        }
+        const userInfo = await userInfoRes.json()
 
         const config: GoogleDriveConfig = {
           accessToken: response.access_token,
           expiresAt: Date.now() + (response.expires_in || 3600) * 1000,
-          email: userInfo.result.email,
+          email: userInfo.email,
         }
 
         resolve(config)
