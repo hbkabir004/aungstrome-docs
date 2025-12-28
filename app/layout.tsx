@@ -1,9 +1,10 @@
 import { NavHeader } from "@/components/nav-header";
+import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type React from "react";
 import { Suspense } from "react";
 import "./globals.css";
@@ -18,6 +19,21 @@ export const metadata: Metadata = {
     icon: "/icon.svg",
     apple: "/icon-192.jpg",
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Aungstrome Docs",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#fafafa" },
     { media: "(prefers-color-scheme: dark)", color: "#1a1d2e" },
@@ -38,6 +54,7 @@ export default function RootLayout({
           <ThemeProvider>
             <NavHeader />
             {children}
+            <PWAInstallPrompt />
           </ThemeProvider>
         </Suspense>
         <Analytics />
