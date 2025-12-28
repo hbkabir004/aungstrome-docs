@@ -14,6 +14,10 @@ export const metadata: Metadata = {
     "Personal documentation app for interview preparation with Q&A, code snippets, and interactive previews",
   generator: "v0.app",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon-192.jpg",
+  },
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#fafafa" },
     { media: "(prefers-color-scheme: dark)", color: "#1a1d2e" },

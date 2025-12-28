@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev",
-    "lint": "next lint",
+    "dev": "next dev --webpack",
+    "lint": "eslint .",
     "start": "next start"
   },
   "dependencies": {
@@ -34,10 +34,10 @@
     "highlight.js": "latest",
     "idb": "latest",
     "lucide-react": "^0.454.0",
-    "next": "15.2.4",
+    "next": "16.1.1",
     "next-pwa": "latest",
-    "react": "^19",
-    "react-dom": "^19",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
     "react-markdown": "latest",
     "rehype-highlight": "latest",
     "rehype-sanitize": "latest",
@@ -49,13 +49,19 @@
   },
   "devDependencies": {
     "@types/node": "^22",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
     "baseline-browser-mapping": "^2.9.11",
-    "eslint": "^8",
-    "eslint-config-next": "^15.1.6",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.1",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.2.7",
+      "@types/react-dom": "19.2.3"
+    }
   }
 }
