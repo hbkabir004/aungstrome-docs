@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import Link from "next/link"
 import { BookOpen, FileText, Code2, MoreVertical, Pencil, Trash2 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "./ui/card"
@@ -15,7 +16,7 @@ interface TopicCardProps {
   onDelete: () => void
 }
 
-export function TopicCard({ topic, qaCount, snippetCount, onEdit, onDelete }: TopicCardProps) {
+export const TopicCard = memo(function TopicCard({ topic, qaCount, snippetCount, onEdit, onDelete }: TopicCardProps) {
   return (
     <Card className="group relative overflow-hidden transition-all hover:shadow-md">
       <CardHeader>
@@ -68,4 +69,4 @@ export function TopicCard({ topic, qaCount, snippetCount, onEdit, onDelete }: To
       </CardContent>
     </Card>
   )
-}
+})

@@ -9,6 +9,7 @@ import {
   getSyncStatus,
   initGoogleAPI,
   isTokenExpired,
+  restoreAccessToken,
   saveSyncStatus,
   syncWithGoogleDrive,
   uploadToGoogleDrive,
@@ -16,40 +17,61 @@ import {
 import { exportData, importData } from "@/lib/storage"
 import { getGoogleDriveConfig, getSettings, saveGoogleDriveConfig, saveSettings } from "@/lib/storage/settings"
 import type { GoogleDriveConfig, SyncStatus } from "@/lib/types"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 export function useGoogleDriveSync() {
   const { toast } = useToast()
   const [config, setConfig] = useState<GoogleDriveConfig | null>(null)
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({ isSyncing: false })
   const [isInitialized, setIsInitialized] = useState(false)
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(false)
+  const [syncIntervalMinutes, setSyncIntervalMinutes] = useState(30)
+
+  // Ref to store the latest sync function to avoid stale closures in intervals
+  const syncFnRef = useRef<(() => Promise<void>) | null>(null)
 
   // Load config and sync status on mount
   useEffect(() => {
     const loadedConfig = getGoogleDriveConfig()
     const loadedStatus = getSyncStatus()
+    const settings = getSettings()
 
     setConfig(loadedConfig)
     setSyncStatus(loadedStatus)
+    setAutoSyncEnabled(settings.autoSync)
+    setSyncIntervalMinutes(settings.syncInterval)
 
-    // Initialize Google API
+    // Initialize Google API and restore access token
     if (loadedConfig) {
-      initGoogleAPI().then(() => setIsInitialized(true))
+      restoreAccessToken(loadedConfig)
+        .then((restored) => {
+          setIsInitialized(true)
+          if (!restored && !isTokenExpired(loadedConfig)) {
+            // Token restore failed but not expired - try initializing anyway
+            return initGoogleAPI()
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to restore Google Drive session:", error)
+          setIsInitialized(true)
+        })
     }
   }, [])
 
   // Auto-sync interval
   useEffect(() => {
-    const settings = getSettings()
-    if (!config || !settings.autoSync || isTokenExpired(config)) return
+    if (!config || !autoSyncEnabled || isTokenExpired(config)) return
 
-    const intervalMs = settings.syncInterval * 60 * 1000
+    const intervalMs = syncIntervalMinutes * 60 * 1000
     const interval = setInterval(() => {
-      performSync()
+      // Use ref to get the latest sync function, avoiding stale closures
+      if (syncFnRef.current) {
+        syncFnRef.current()
+      }
     }, intervalMs)
 
     return () => clearInterval(interval)
-  }, [config])
+  }, [config, autoSyncEnabled, syncIntervalMinutes])
 
   const connect = useCallback(async () => {
     try {
@@ -151,6 +173,11 @@ export function useGoogleDriveSync() {
     }
   }, [config, toast])
 
+  // Keep the ref updated with the latest performSync function
+  useEffect(() => {
+    syncFnRef.current = performSync
+  }, [performSync])
+
   const uploadBackup = useCallback(async () => {
     if (!config || isTokenExpired(config)) {
       toast({
@@ -247,6 +274,7 @@ export function useGoogleDriveSync() {
 
   const toggleAutoSync = useCallback(
     (enabled: boolean) => {
+      setAutoSyncEnabled(enabled)
       saveSettings({ autoSync: enabled })
 
       toast({
@@ -257,7 +285,8 @@ export function useGoogleDriveSync() {
     [toast],
   )
 
-  const setSyncInterval = useCallback((minutes: number) => {
+  const updateSyncInterval = useCallback((minutes: number) => {
+    setSyncIntervalMinutes(minutes)
     saveSettings({ syncInterval: minutes })
   }, [])
 
@@ -272,6 +301,6 @@ export function useGoogleDriveSync() {
     uploadBackup,
     restoreBackup,
     toggleAutoSync,
-    setSyncInterval,
+    setSyncInterval: updateSyncInterval,
   }
 }

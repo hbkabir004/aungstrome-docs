@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { memo, useCallback } from "react"
 
 import { Code2, MoreVertical, Pencil, Trash2, Copy, History } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card"
@@ -18,7 +19,7 @@ interface SnippetCardProps {
   onClick: () => void
 }
 
-export function SnippetCard({ snippet, onEdit, onDelete, onClick }: SnippetCardProps) {
+export const SnippetCard = memo(function SnippetCard({ snippet, onEdit, onDelete, onClick }: SnippetCardProps) {
   const { toast } = useToast()
 
   const handleCopy = async (e: React.MouseEvent) => {
@@ -96,4 +97,4 @@ export function SnippetCard({ snippet, onEdit, onDelete, onClick }: SnippetCardP
       </CardContent>
     </Card>
   )
-}
+})

@@ -13,13 +13,13 @@ const nextConfig = {
     unoptimized: true,
   },
   async headers() {
-    // Disable COOP globally to avoid window.opener being blocked for Google auth popups
-    // If you prefer, scope this to specific routes instead of /(.*)
+    // Configure headers for Google OAuth popup compatibility
     return [
       {
         source: "/(.*)",
         headers: [
-          { key: "Cross-Origin-Opener-Policy", value: "unsafe-none" },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+          { key: "Cross-Origin-Embedder-Policy", value: "unsafe-none" },
         ],
       },
     ]

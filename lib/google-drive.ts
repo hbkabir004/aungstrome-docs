@@ -33,50 +33,94 @@ let gapiInited = false
 let gisInited = false
 let tokenClient: any = null
 let gapi: any = null
+let initPromise: Promise<void> | null = null
+
+// Load a script and return a promise
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // Check if script already exists
+    const existing = document.querySelector(`script[src="${src}"]`)
+    if (existing) {
+      resolve()
+      return
+    }
+
+    const script = document.createElement("script")
+    script.src = src
+    script.async = true
+    script.defer = true
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error(`Failed to load script: ${src}`))
+    document.head.appendChild(script)
+  })
+}
 
 // Initialize Google API
 export async function initGoogleAPI(): Promise<void> {
   if (typeof window === "undefined") return
 
-  return new Promise((resolve, reject) => {
-    // Load gapi
-    const gapiScript = document.createElement("script")
-    gapiScript.src = "https://apis.google.com/js/api.js"
-    gapiScript.async = true
-    gapiScript.defer = true
-    gapiScript.onload = () => {
-      gapi = window.gapi
-      gapi.load("client", async () => {
-        try {
-          await gapi.client.init({
-            apiKey: GOOGLE_API_KEY,
-            discoveryDocs: [DISCOVERY_DOC],
-          })
-          gapiInited = true
-          if (gisInited) resolve()
-        } catch (error) {
-          reject(error)
-        }
-      })
-    }
-    document.head.appendChild(gapiScript)
+  // Return existing promise if already initializing
+  if (initPromise) return initPromise
 
-    // Load gis
-    const gisScript = document.createElement("script")
-    gisScript.src = "https://accounts.google.com/gsi/client"
-    gisScript.async = true
-    gisScript.defer = true
-    gisScript.onload = () => {
-      tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: SCOPES,
-        callback: () => {}, // Will be set during auth
-      })
-      gisInited = true
-      if (gapiInited) resolve()
+  initPromise = (async () => {
+    try {
+      // Load both scripts in parallel
+      await Promise.all([
+        loadScript("https://apis.google.com/js/api.js"),
+        loadScript("https://accounts.google.com/gsi/client"),
+      ])
+
+      // Initialize gapi if not already done
+      if (!gapiInited) {
+        gapi = window.gapi
+        await new Promise<void>((resolve, reject) => {
+          gapi.load("client", async () => {
+            try {
+              await gapi.client.init({
+                apiKey: GOOGLE_API_KEY,
+                discoveryDocs: [DISCOVERY_DOC],
+              })
+              gapiInited = true
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
+          })
+        })
+      }
+
+      // Initialize token client if not already done
+      if (!gisInited && window.google?.accounts?.oauth2) {
+        tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: SCOPES,
+          callback: () => {}, // Will be set during auth
+        })
+        gisInited = true
+      }
+    } catch (error) {
+      initPromise = null // Allow retry on failure
+      throw error
     }
-    document.head.appendChild(gisScript)
-  })
+  })()
+
+  return initPromise
+}
+
+// Restore access token to gapi client (call after page refresh with existing config)
+export async function restoreAccessToken(config: GoogleDriveConfig): Promise<boolean> {
+  if (isTokenExpired(config)) {
+    return false
+  }
+
+  await initGoogleAPI()
+
+  if (gapi?.client) {
+    gapi.client.setToken({ access_token: config.accessToken })
+    return true
+  }
+
+  return false
 }
 
 // Authenticate with Google Drive
@@ -129,7 +173,22 @@ export async function authenticateGoogleDrive(): Promise<GoogleDriveConfig> {
 
 // Set access token for API calls
 function setAccessToken(token: string) {
+  if (!gapi?.client) {
+    console.error("gapi.client not initialized")
+    return
+  }
   gapi.client.setToken({ access_token: token })
+}
+
+// Ensure gapi is ready and token is set before making API calls
+async function ensureAuthenticated(config: GoogleDriveConfig): Promise<void> {
+  if (!gapiInited) {
+    await initGoogleAPI()
+  }
+  if (!gapi?.client) {
+    throw new Error("Google API client not initialized")
+  }
+  gapi.client.setToken({ access_token: config.accessToken })
 }
 
 // Check if token is expired
@@ -139,7 +198,7 @@ export function isTokenExpired(config: GoogleDriveConfig): boolean {
 
 // Find or create backup file in Google Drive
 async function getOrCreateBackupFile(config: GoogleDriveConfig): Promise<string> {
-  setAccessToken(config.accessToken)
+  await ensureAuthenticated(config)
 
   // Search for existing backup file
   const response = await gapi.client.drive.files.list({
@@ -172,7 +231,7 @@ export async function uploadToGoogleDrive(config: GoogleDriveConfig, data: AppDa
     throw new Error("Access token expired. Please reconnect Google Drive.")
   }
 
-  setAccessToken(config.accessToken)
+  await ensureAuthenticated(config)
 
   const fileId = config.fileId || (await getOrCreateBackupFile(config))
   const content = JSON.stringify(data, null, 2)
@@ -196,7 +255,7 @@ export async function downloadFromGoogleDrive(config: GoogleDriveConfig): Promis
     throw new Error("Access token expired. Please reconnect Google Drive.")
   }
 
-  setAccessToken(config.accessToken)
+  await ensureAuthenticated(config)
 
   const fileId = config.fileId || (await getOrCreateBackupFile(config))
 

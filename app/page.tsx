@@ -19,7 +19,7 @@ import { initializeDataIfNeeded } from "@/lib/init-data";
 import type { Topic } from "@/lib/types";
 import { BookOpen, Code2, FileText, Plus, SearchIcon } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function HomePage() {
   const [initialized, setInitialized] = useState(false);
@@ -35,29 +35,33 @@ export default function HomePage() {
     initializeDataIfNeeded().then(() => setInitialized(true));
   }, []);
 
-  const handleSaveTopic = async (topic: Topic) => {
+  const handleSaveTopic = useCallback(async (topic: Topic) => {
     if (editingTopic) {
       await updateTopic(topic);
     } else {
       await createTopic(topic);
     }
     setEditingTopic(undefined);
-  };
+  }, [editingTopic, updateTopic, createTopic]);
 
-  const handleDeleteTopic = async () => {
+  const handleDeleteTopic = useCallback(async () => {
     if (deletingTopic) {
       await deleteTopic(deletingTopic.id);
       setDeletingTopic(undefined);
     }
-  };
+  }, [deletingTopic, deleteTopic]);
 
-  const getTopicCounts = (topicId: string) => {
-    const qaCount = qaItems.filter((item) => item.topicId === topicId).length;
-    const snippetCount = snippets.filter(
-      (snippet) => snippet.topicId === topicId
-    ).length;
-    return { qaCount, snippetCount };
-  };
+  // Memoize topic counts to avoid recalculating on every render
+  const topicCounts = useMemo(() => {
+    const counts: Record<string, { qaCount: number; snippetCount: number }> = {};
+    topics.forEach((topic) => {
+      counts[topic.id] = {
+        qaCount: qaItems.filter((item) => item.topicId === topic.id).length,
+        snippetCount: snippets.filter((s) => s.topicId === topic.id).length,
+      };
+    });
+    return counts;
+  }, [topics, qaItems, snippets]);
 
   if (!initialized) {
     return (
@@ -177,22 +181,19 @@ export default function HomePage() {
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {topics.map((topic) => {
-                const { qaCount, snippetCount } = getTopicCounts(topic.id);
-                return (
-                  <TopicCard
-                    key={topic.id}
-                    topic={topic}
-                    qaCount={qaCount}
-                    snippetCount={snippetCount}
-                    onEdit={() => {
-                      setEditingTopic(topic);
-                      setDialogOpen(true);
-                    }}
-                    onDelete={() => setDeletingTopic(topic)}
-                  />
-                );
-              })}
+              {topics.map((topic) => (
+                <TopicCard
+                  key={topic.id}
+                  topic={topic}
+                  qaCount={topicCounts[topic.id]?.qaCount ?? 0}
+                  snippetCount={topicCounts[topic.id]?.snippetCount ?? 0}
+                  onEdit={() => {
+                    setEditingTopic(topic);
+                    setDialogOpen(true);
+                  }}
+                  onDelete={() => setDeletingTopic(topic)}
+                />
+              ))}
             </div>
           )}
         </div>

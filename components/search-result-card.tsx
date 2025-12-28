@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import { FileText, Code2, ExternalLink } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card"
 import { Badge } from "./ui/badge"
@@ -14,7 +15,7 @@ interface SearchResultCardProps {
   onClick: () => void
 }
 
-export function SearchResultCard({ result, topicName, onClick }: SearchResultCardProps) {
+export const SearchResultCard = memo(function SearchResultCard({ result, topicName, onClick }: SearchResultCardProps) {
   if (result.type === "qa") {
     const item = result.item as QAItem
     return (
@@ -97,4 +98,4 @@ export function SearchResultCard({ result, topicName, onClick }: SearchResultCar
       </CardContent>
     </Card>
   )
-}
+})

@@ -1,7 +1,8 @@
 "use client"
 
+import { memo, useMemo } from "react"
 import { Sandpack } from "@codesandbox/sandpack-react"
-import { githubLight, githubDark } from "@codesandbox/sandpack-themes"
+import { githubLight, nightOwl } from "@codesandbox/sandpack-themes"
 import { useTheme } from "./theme-provider"
 import type { SnippetLanguage } from "@/lib/types"
 
@@ -10,9 +11,15 @@ interface CodePreviewProps {
   language: SnippetLanguage
 }
 
-export function CodePreview({ code, language }: CodePreviewProps) {
+export const CodePreview = memo(function CodePreview({ code, language }: CodePreviewProps) {
   const { theme } = useTheme()
-  const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+
+  const isDark = useMemo(() => {
+    if (typeof window === "undefined") return false
+    return theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+  }, [theme])
+
+  const sandpackTheme = isDark ? nightOwl : githubLight
 
   // For React/TSX/JSX, use Sandpack for interactive preview
   if (language === "tsx" || language === "jsx") {
@@ -21,7 +28,7 @@ export function CodePreview({ code, language }: CodePreviewProps) {
     return (
       <Sandpack
         template={template}
-        theme={isDark ? githubDark : githubLight}
+        theme={sandpackTheme}
         files={{
           "/App.tsx": code,
           "/App.jsx": code,
@@ -51,4 +58,4 @@ export function CodePreview({ code, language }: CodePreviewProps) {
       )}
     </div>
   )
-}
+})

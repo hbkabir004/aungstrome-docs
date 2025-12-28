@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
+import dynamic from "next/dynamic"
 
-import { GoogleDriveSync } from "@/components/google-drive-sync"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   AlertDialog,
@@ -18,12 +18,32 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useQAItems, useSnippets, useTopics } from "@/hooks/use-data"
 import { useToast } from "@/hooks/use-toast"
 import { clearAllData, exportData, getStorageBackend, importData, setStorageBackend } from "@/lib/storage"
 import type { StorageBackend } from "@/lib/types"
-import { AlertCircle, CheckCircle2, Cloud, Database, Download, Github, Trash2, Upload } from "lucide-react"
-import { useState } from "react"
+import { AlertCircle, CheckCircle2, Database, Download, Github, Trash2, Upload } from "lucide-react"
+import { useCallback, useState } from "react"
+
+// Lazy load GoogleDriveSync as it's a heavy component
+const GoogleDriveSync = dynamic<Record<string, never>>(
+  () => import("@/components/google-drive-sync").then((mod) => ({ default: mod.GoogleDriveSync })),
+  {
+    ssr: false,
+    loading: () => (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-64 mt-2" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+    ),
+  }
+)
 
 export default function SettingsPage() {
   const { toast } = useToast()
@@ -36,7 +56,7 @@ export default function SettingsPage() {
   const [isExporting, setIsExporting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
 
-  const handleExport = async () => {
+  const handleExport = useCallback(async () => {
     try {
       setIsExporting(true)
       const data = await exportData()
@@ -63,9 +83,9 @@ export default function SettingsPage() {
     } finally {
       setIsExporting(false)
     }
-  }
+  }, [toast])
 
-  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -96,9 +116,9 @@ export default function SettingsPage() {
       setIsImporting(false)
       event.target.value = ""
     }
-  }
+  }, [toast, refreshTopics, refreshQA, refreshSnippets])
 
-  const handleClearData = async () => {
+  const handleClearData = useCallback(async () => {
     try {
       await clearAllData()
       await Promise.all([refreshTopics(), refreshQA(), refreshSnippets()])
@@ -115,9 +135,9 @@ export default function SettingsPage() {
         variant: "destructive",
       })
     }
-  }
+  }, [toast, refreshTopics, refreshQA, refreshSnippets])
 
-  const handleStorageBackendChange = (backend: StorageBackend) => {
+  const handleStorageBackendChange = useCallback((backend: StorageBackend) => {
     setStorageBackend(backend)
     setStorageBackendState(backend)
 
@@ -130,7 +150,7 @@ export default function SettingsPage() {
     setTimeout(() => {
       window.location.reload()
     }, 1500)
-  }
+  }, [toast])
 
   const totalItems = topics.length + qaItems.length + snippets.length
 
@@ -240,23 +260,22 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
+          {/* Google Drive Sync */}
+          <GoogleDriveSync />
+
           {/* Future Sync Options */}
           <Card>
             <CardHeader>
-              <CardTitle>Sync & Backup (Coming Soon)</CardTitle>
-              <CardDescription>Connect external services for automatic backup and sync</CardDescription>
+              <CardTitle>More Sync Options (Coming Soon)</CardTitle>
+              <CardDescription>Additional backup services</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent>
               <Button variant="outline" disabled className="w-full justify-start bg-transparent">
                 <Github className="mr-2 h-4 w-4" />
                 Connect GitHub Gist
               </Button>
-              <Button variant="outline" disabled className="w-full justify-start bg-transparent">
-                <Cloud className="mr-2 h-4 w-4" />
-                Connect Google Drive
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                These features will allow you to automatically sync your data to cloud services
+              <p className="text-xs text-muted-foreground mt-2">
+                Sync your data to GitHub Gist for version-controlled backups
               </p>
             </CardContent>
           </Card>
@@ -281,9 +300,6 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Google Drive Sync */}
-          <GoogleDriveSync />
         </div>
       </main>
 
