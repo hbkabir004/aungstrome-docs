@@ -1,4 +1,5 @@
 import { NavHeader } from "@/components/nav-header";
+import { OfflineStatusBanner } from "@/components/offline-status-banner";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
@@ -54,6 +55,7 @@ export default function RootLayout({
           <ThemeProvider>
             <NavHeader />
             {children}
+            <OfflineStatusBanner />
             <PWAInstallPrompt />
           </ThemeProvider>
         </Suspense>
