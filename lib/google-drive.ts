@@ -36,7 +36,6 @@ const TOKEN_EXPIRY_BUFFER_MS = 5 * 60 * 1000
 
 let gapiInited = false
 let gisInited = false
-let tokenClient: any = null
 let gapi: any = null
 let initPromise: Promise<void> | null = null
 let isRefreshing = false
@@ -96,13 +95,8 @@ export async function initGoogleAPI(): Promise<void> {
         })
       }
 
-      // Initialize token client if not already done
+      // Mark GIS as initialized if available (token client will be created on-demand)
       if (!gisInited && window.google?.accounts?.oauth2) {
-        tokenClient = window.google.accounts.oauth2.initTokenClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: SCOPES,
-          callback: () => {}, // Will be set during auth
-        })
         gisInited = true
       }
     } catch (error) {
@@ -132,47 +126,54 @@ export async function restoreAccessToken(config: GoogleDriveConfig): Promise<boo
 
 // Authenticate with Google Drive
 export async function authenticateGoogleDrive(): Promise<GoogleDriveConfig> {
-  if (!gapiInited || !gisInited || !tokenClient) {
+  if (!gapiInited || !gisInited) {
     await initGoogleAPI()
   }
 
+  if (!window.google?.accounts?.oauth2) {
+    throw new Error("Google Identity Services not loaded")
+  }
+
   return new Promise((resolve, reject) => {
-    if (!tokenClient) {
-      reject(new Error("Token client not initialized"))
-      return
-    }
-
-    tokenClient.callback = async (response: any) => {
-      if (response.error) {
-        reject(new Error(response.error))
-        return
-      }
-
-      try {
-        // Set access token before any authenticated requests
-        setAccessToken(response.access_token)
-
-        // Get user info using OAuth bearer token (avoid API key-only requests)
-        const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: { Authorization: `Bearer ${response.access_token}` },
-        })
-        if (!userInfoRes.ok) {
-          const errText = await userInfoRes.text()
-          throw new Error(`Failed to fetch user info: ${userInfoRes.status} ${errText}`)
-        }
-        const userInfo = await userInfoRes.json()
-
-        const config: GoogleDriveConfig = {
-          accessToken: response.access_token,
-          expiresAt: Date.now() + (response.expires_in || 3600) * 1000,
-          email: userInfo.email,
+    // Create token client on-demand with the callback (GIS requires callback at init time)
+    const tokenClient = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: SCOPES,
+      callback: async (response: any) => {
+        if (response.error) {
+          reject(new Error(response.error))
+          return
         }
 
-        resolve(config)
-      } catch (error) {
-        reject(error)
-      }
-    }
+        try {
+          // Set access token before any authenticated requests
+          setAccessToken(response.access_token)
+
+          // Get user info using OAuth bearer token (avoid API key-only requests)
+          const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+            headers: { Authorization: `Bearer ${response.access_token}` },
+          })
+          if (!userInfoRes.ok) {
+            const errText = await userInfoRes.text()
+            throw new Error(`Failed to fetch user info: ${userInfoRes.status} ${errText}`)
+          }
+          const userInfo = await userInfoRes.json()
+
+          const config: GoogleDriveConfig = {
+            accessToken: response.access_token,
+            expiresAt: Date.now() + (response.expires_in || 3600) * 1000,
+            email: userInfo.email,
+          }
+
+          resolve(config)
+        } catch (error) {
+          reject(error)
+        }
+      },
+      error_callback: (error: any) => {
+        reject(new Error(error.message || "Authentication failed"))
+      },
+    })
 
     tokenClient.requestAccessToken({ prompt: "consent" })
   })
@@ -229,7 +230,7 @@ export async function silentRefreshToken(
   }
 
   // Make sure Google API is initialized
-  if (!gapiInited || !gisInited || !tokenClient) {
+  if (!gapiInited || !gisInited) {
     try {
       await initGoogleAPI()
     } catch (error) {
@@ -238,16 +239,14 @@ export async function silentRefreshToken(
     }
   }
 
+  if (!window.google?.accounts?.oauth2) {
+    console.error("Google Identity Services not available")
+    return null
+  }
+
   isRefreshing = true
 
   refreshPromise = new Promise<GoogleDriveConfig | null>((resolve) => {
-    if (!tokenClient) {
-      isRefreshing = false
-      refreshPromise = null
-      resolve(null)
-      return
-    }
-
     // Set up a timeout for the refresh attempt
     const timeoutId = setTimeout(() => {
       isRefreshing = false
@@ -255,35 +254,46 @@ export async function silentRefreshToken(
       resolve(null)
     }, 10000) // 10 second timeout
 
-    tokenClient.callback = async (response: any) => {
-      clearTimeout(timeoutId)
-      isRefreshing = false
-      refreshPromise = null
+    // Create token client on-demand with the callback
+    const tokenClient = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: SCOPES,
+      callback: async (response: any) => {
+        clearTimeout(timeoutId)
+        isRefreshing = false
+        refreshPromise = null
 
-      if (response.error) {
-        // User needs to re-authenticate
-        console.log("Silent refresh failed:", response.error)
-        resolve(null)
-        return
-      }
-
-      try {
-        // Set access token before any authenticated requests
-        setAccessToken(response.access_token)
-
-        const config: GoogleDriveConfig = {
-          accessToken: response.access_token,
-          expiresAt: Date.now() + (response.expires_in || 3600) * 1000,
-          email: currentConfig.email,
-          fileId: currentConfig.fileId,
+        if (response.error) {
+          // User needs to re-authenticate
+          console.log("Silent refresh failed:", response.error)
+          resolve(null)
+          return
         }
 
-        resolve(config)
-      } catch (error) {
-        console.error("Error processing refreshed token:", error)
+        try {
+          // Set access token before any authenticated requests
+          setAccessToken(response.access_token)
+
+          const config: GoogleDriveConfig = {
+            accessToken: response.access_token,
+            expiresAt: Date.now() + (response.expires_in || 3600) * 1000,
+            email: currentConfig.email,
+            fileId: currentConfig.fileId,
+          }
+
+          resolve(config)
+        } catch (error) {
+          console.error("Error processing refreshed token:", error)
+          resolve(null)
+        }
+      },
+      error_callback: () => {
+        clearTimeout(timeoutId)
+        isRefreshing = false
+        refreshPromise = null
         resolve(null)
-      }
-    }
+      },
+    })
 
     // Try silent refresh (empty prompt means no popup if possible)
     try {
