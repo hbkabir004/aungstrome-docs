@@ -61,21 +61,20 @@ export function useGoogleDriveSync() {
       setNeedsReconnect(true)
     }
 
-    // Initialize Google API and restore access token
-    if (loadedConfig) {
-      restoreAccessToken(loadedConfig)
-        .then((restored) => {
-          setIsInitialized(true)
-          if (!restored && !isTokenExpired(loadedConfig)) {
-            // Token restore failed but not expired - try initializing anyway
-            return initGoogleAPI()
-          }
-        })
-        .catch((error) => {
-          console.error("Failed to restore Google Drive session:", error)
-          setIsInitialized(true)
-        })
-    }
+    // Always pre-initialize Google API so the connect button works immediately
+    // This preserves the user gesture chain for popup windows
+    initGoogleAPI()
+      .then(() => {
+        setIsInitialized(true)
+        // Restore access token if we have a config
+        if (loadedConfig) {
+          return restoreAccessToken(loadedConfig)
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to initialize Google API:", error)
+        setIsInitialized(true)
+      })
   }, [])
 
   // Online/offline detection
@@ -206,7 +205,8 @@ export function useGoogleDriveSync() {
 
   const connect = useCallback(async () => {
     try {
-      await initGoogleAPI()
+      // Don't await initGoogleAPI here - it should already be initialized on mount
+      // This preserves the user gesture for the popup window
       const newConfig = await authenticateGoogleDrive()
 
       // Perform initial sync

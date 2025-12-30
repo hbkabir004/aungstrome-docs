@@ -47,7 +47,32 @@ function loadScript(src: string): Promise<void> {
     // Check if script already exists
     const existing = document.querySelector(`script[src="${src}"]`)
     if (existing) {
-      resolve()
+      // Script tag exists, but we need to wait for it to be loaded
+      // Check if it's already loaded by looking for expected globals
+      if (src.includes("api.js") && window.gapi) {
+        resolve()
+        return
+      }
+      if (src.includes("gsi/client") && window.google?.accounts?.oauth2) {
+        resolve()
+        return
+      }
+      // Script exists but globals not ready - wait a bit and check again
+      const checkInterval = setInterval(() => {
+        if (src.includes("api.js") && window.gapi) {
+          clearInterval(checkInterval)
+          resolve()
+        }
+        if (src.includes("gsi/client") && window.google?.accounts?.oauth2) {
+          clearInterval(checkInterval)
+          resolve()
+        }
+      }, 100)
+      // Timeout after 10 seconds
+      setTimeout(() => {
+        clearInterval(checkInterval)
+        reject(new Error(`Script load timeout: ${src}`))
+      }, 10000)
       return
     }
 
@@ -58,6 +83,26 @@ function loadScript(src: string): Promise<void> {
     script.onload = () => resolve()
     script.onerror = () => reject(new Error(`Failed to load script: ${src}`))
     document.head.appendChild(script)
+  })
+}
+
+// Wait for a condition with timeout
+function waitFor(condition: () => boolean, timeoutMs: number = 10000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (condition()) {
+      resolve()
+      return
+    }
+    const checkInterval = setInterval(() => {
+      if (condition()) {
+        clearInterval(checkInterval)
+        resolve()
+      }
+    }, 100)
+    setTimeout(() => {
+      clearInterval(checkInterval)
+      reject(new Error("Timeout waiting for condition"))
+    }, timeoutMs)
   })
 }
 
@@ -75,6 +120,9 @@ export async function initGoogleAPI(): Promise<void> {
         loadScript("https://apis.google.com/js/api.js"),
         loadScript("https://accounts.google.com/gsi/client"),
       ])
+
+      // Wait for gapi to be available
+      await waitFor(() => !!window.gapi)
 
       // Initialize gapi if not already done
       if (!gapiInited) {
@@ -95,10 +143,9 @@ export async function initGoogleAPI(): Promise<void> {
         })
       }
 
-      // Mark GIS as initialized if available (token client will be created on-demand)
-      if (!gisInited && window.google?.accounts?.oauth2) {
-        gisInited = true
-      }
+      // Wait for GIS to be available
+      await waitFor(() => !!window.google?.accounts?.oauth2)
+      gisInited = true
     } catch (error) {
       initPromise = null // Allow retry on failure
       throw error
@@ -125,15 +172,22 @@ export async function restoreAccessToken(config: GoogleDriveConfig): Promise<boo
 }
 
 // Authenticate with Google Drive
-export async function authenticateGoogleDrive(): Promise<GoogleDriveConfig> {
+export function authenticateGoogleDrive(): Promise<GoogleDriveConfig> {
+  // Validate credentials first (synchronous checks)
+  if (!GOOGLE_CLIENT_ID) {
+    return Promise.reject(new Error("Google Client ID is not configured. Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID environment variable."))
+  }
+
   if (!gapiInited || !gisInited) {
-    await initGoogleAPI()
+    return Promise.reject(new Error("Google API not initialized. Please wait a moment and try again."))
   }
 
   if (!window.google?.accounts?.oauth2) {
-    throw new Error("Google Identity Services not loaded")
+    return Promise.reject(new Error("Google Identity Services not loaded"))
   }
 
+  // All synchronous - create token client and request access token immediately
+  // This preserves the user gesture for popup windows
   return new Promise((resolve, reject) => {
     // Create token client on-demand with the callback (GIS requires callback at init time)
     const tokenClient = window.google.accounts.oauth2.initTokenClient({
