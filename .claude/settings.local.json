@@ -4,7 +4,9 @@
       "Bash(claude doctor)",
       "Bash(pnpm build:*)",
       "Bash(pnpm lint:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(cat:*)",
+      "Bash(npx eslint:*)"
     ]
   }
 }

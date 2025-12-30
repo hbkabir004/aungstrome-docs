@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { useGoogleDriveSync } from "@/hooks/use-google-drive-sync"
 import { getSettings } from "@/lib/storage/settings"
-import { AlertCircle, CheckCircle2, Cloud, CloudOff, Download, RefreshCw, Upload } from "lucide-react"
+import { AlertCircle, CheckCircle2, Cloud, CloudOff, Download, RefreshCw, Upload, WifiOff, LogIn } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export function GoogleDriveSync() {
@@ -26,7 +26,10 @@ export function GoogleDriveSync() {
     config,
     syncStatus,
     isConnected,
+    isOffline,
+    needsReconnect,
     connect,
+    reconnect,
     disconnect,
     sync,
     uploadBackup,
@@ -38,6 +41,7 @@ export function GoogleDriveSync() {
   const [showDisconnectDialog, setShowDisconnectDialog] = useState(false)
   const [autoSync, setAutoSync] = useState(false)
   const [syncInterval, setSyncIntervalState] = useState(30)
+  const [lastSyncText, setLastSyncText] = useState("Never")
 
   useEffect(() => {
     const settings = getSettings()
@@ -45,10 +49,42 @@ export function GoogleDriveSync() {
     setSyncIntervalState(settings.syncInterval)
   }, [])
 
+  // Update last sync text periodically
+  useEffect(() => {
+    const updateLastSyncText = () => {
+      const timestamp = syncStatus.lastSyncAt
+      if (!timestamp) {
+        setLastSyncText("Never")
+        return
+      }
+
+      const now = Date.now()
+      const diff = now - timestamp
+      const minutes = Math.floor(diff / 60000)
+      const hours = Math.floor(minutes / 60)
+      const days = Math.floor(hours / 24)
+
+      if (days > 0) {
+        setLastSyncText(`${days} day${days > 1 ? "s" : ""} ago`)
+      } else if (hours > 0) {
+        setLastSyncText(`${hours} hour${hours > 1 ? "s" : ""} ago`)
+      } else if (minutes > 0) {
+        setLastSyncText(`${minutes} minute${minutes > 1 ? "s" : ""} ago`)
+      } else {
+        setLastSyncText("Just now")
+      }
+    }
+
+    updateLastSyncText()
+    const interval = setInterval(updateLastSyncText, 60000) // Update every minute
+
+    return () => clearInterval(interval)
+  }, [syncStatus.lastSyncAt])
+
   const handleConnect = async () => {
     try {
       await connect()
-    } catch (error) {
+    } catch {
       // Error already handled in hook
     }
   }
@@ -69,21 +105,6 @@ export function GoogleDriveSync() {
     setSyncInterval(minutes)
   }
 
-  const formatLastSync = (timestamp?: number) => {
-    if (!timestamp) return "Never"
-
-    const now = Date.now()
-    const diff = now - timestamp
-    const minutes = Math.floor(diff / 60000)
-    const hours = Math.floor(minutes / 60)
-    const days = Math.floor(hours / 24)
-
-    if (days > 0) return `${days} day${days > 1 ? "s" : ""} ago`
-    if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ago`
-    if (minutes > 0) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`
-    return "Just now"
-  }
-
   return (
     <Card>
       <CardHeader>
@@ -94,6 +115,17 @@ export function GoogleDriveSync() {
         <CardDescription>Automatically backup and sync your data to Google Drive</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Offline Banner */}
+        {isOffline && (
+          <Alert>
+            <WifiOff className="h-4 w-4" />
+            <AlertTitle>You're offline</AlertTitle>
+            <AlertDescription>
+              Your changes are saved locally. Sync will resume automatically when you're back online.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {!isConnected ? (
           <>
             <Alert>
@@ -105,7 +137,7 @@ export function GoogleDriveSync() {
               </AlertDescription>
             </Alert>
 
-            <Button onClick={handleConnect} className="w-full cursor-pointer">
+            <Button onClick={handleConnect} disabled={isOffline} className="w-full cursor-pointer">
               <Cloud className="mr-2 h-4 w-4" />
               Connect Google Drive
             </Button>
@@ -127,18 +159,42 @@ export function GoogleDriveSync() {
             <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
               <div className="space-y-1">
                 <p className="font-medium flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  Connected
+                  {needsReconnect ? (
+                    <>
+                      <AlertCircle className="h-4 w-4 text-yellow-500" />
+                      Session Expired
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      Connected
+                    </>
+                  )}
                 </p>
                 <p className="text-sm text-muted-foreground">{config?.email}</p>
-                <p className="text-xs text-muted-foreground">Last sync: {formatLastSync(syncStatus.lastSyncAt)}</p>
+                <p className="text-xs text-muted-foreground">Last sync: {lastSyncText}</p>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setShowDisconnectDialog(true)}>
                 <CloudOff className="h-4 w-4" />
               </Button>
             </div>
 
-            {syncStatus.error && (
+            {/* Session expired - show reconnect */}
+            {needsReconnect && (
+              <Alert variant="default" className="border-yellow-500/50 bg-yellow-500/10">
+                <AlertCircle className="h-4 w-4 text-yellow-500" />
+                <AlertTitle>Session expired</AlertTitle>
+                <AlertDescription className="flex flex-col gap-2">
+                  <span>Your Google Drive session has expired. Please reconnect to continue syncing.</span>
+                  <Button onClick={reconnect} disabled={isOffline} size="sm" className="w-fit">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Reconnect
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {syncStatus.error && !needsReconnect && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Sync Error</AlertTitle>
@@ -177,20 +233,30 @@ export function GoogleDriveSync() {
             <div className="space-y-2">
               <Button
                 onClick={sync}
-                disabled={syncStatus.isSyncing}
+                disabled={syncStatus.isSyncing || isOffline || needsReconnect}
                 className="w-full bg-transparent"
                 variant="outline"
               >
                 <RefreshCw className={`mr-2 h-4 w-4 ${syncStatus.isSyncing ? "animate-spin" : ""}`} />
-                {syncStatus.isSyncing ? "Syncing..." : "Sync Now"}
+                {syncStatus.isSyncing ? "Syncing..." : isOffline ? "Offline" : "Sync Now"}
               </Button>
 
               <div className="grid grid-cols-2 gap-2">
-                <Button onClick={uploadBackup} disabled={syncStatus.isSyncing} variant="outline" size="sm">
+                <Button
+                  onClick={uploadBackup}
+                  disabled={syncStatus.isSyncing || isOffline || needsReconnect}
+                  variant="outline"
+                  size="sm"
+                >
                   <Upload className="mr-2 h-4 w-4" />
                   Upload Backup
                 </Button>
-                <Button onClick={restoreBackup} disabled={syncStatus.isSyncing} variant="outline" size="sm">
+                <Button
+                  onClick={restoreBackup}
+                  disabled={syncStatus.isSyncing || isOffline || needsReconnect}
+                  variant="outline"
+                  size="sm"
+                >
                   <Download className="mr-2 h-4 w-4" />
                   Restore Backup
                 </Button>

@@ -12,10 +12,12 @@ declare global {
             client_id: string
             scope: string
             callback: (response: any) => void
+            error_callback?: (error: any) => void
           }) => {
             callback: (response: any) => void
             requestAccessToken: (options: { prompt: string }) => void
           }
+          revoke: (token: string, callback?: () => void) => void
         }
       }
     }
@@ -29,11 +31,16 @@ const SCOPES = "openid email profile https://www.googleapis.com/auth/drive.file"
 const DISCOVERY_DOC = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"
 const BACKUP_FILENAME = "aungstrome-docs-backup.json"
 
+// Buffer time before actual expiration (5 minutes)
+const TOKEN_EXPIRY_BUFFER_MS = 5 * 60 * 1000
+
 let gapiInited = false
 let gisInited = false
 let tokenClient: any = null
 let gapi: any = null
 let initPromise: Promise<void> | null = null
+let isRefreshing = false
+let refreshPromise: Promise<GoogleDriveConfig | null> | null = null
 
 // Load a script and return a promise
 function loadScript(src: string): Promise<void> {
@@ -191,9 +198,106 @@ async function ensureAuthenticated(config: GoogleDriveConfig): Promise<void> {
   gapi.client.setToken({ access_token: config.accessToken })
 }
 
-// Check if token is expired
+// Check if token is expired (with buffer time)
 export function isTokenExpired(config: GoogleDriveConfig): boolean {
+  return Date.now() >= config.expiresAt - TOKEN_EXPIRY_BUFFER_MS
+}
+
+// Check if token is actually expired (no buffer)
+export function isTokenActuallyExpired(config: GoogleDriveConfig): boolean {
   return Date.now() >= config.expiresAt
+}
+
+// Check if we're online
+export function isOnline(): boolean {
+  if (typeof window === "undefined") return true
+  return navigator.onLine
+}
+
+// Silent token refresh - attempts to get a new token without user interaction
+export async function silentRefreshToken(
+  currentConfig: GoogleDriveConfig
+): Promise<GoogleDriveConfig | null> {
+  // If already refreshing, return the existing promise
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise
+  }
+
+  // Check if we're online
+  if (!isOnline()) {
+    return null
+  }
+
+  // Make sure Google API is initialized
+  if (!gapiInited || !gisInited || !tokenClient) {
+    try {
+      await initGoogleAPI()
+    } catch (error) {
+      console.error("Failed to initialize Google API for refresh:", error)
+      return null
+    }
+  }
+
+  isRefreshing = true
+
+  refreshPromise = new Promise<GoogleDriveConfig | null>((resolve) => {
+    if (!tokenClient) {
+      isRefreshing = false
+      refreshPromise = null
+      resolve(null)
+      return
+    }
+
+    // Set up a timeout for the refresh attempt
+    const timeoutId = setTimeout(() => {
+      isRefreshing = false
+      refreshPromise = null
+      resolve(null)
+    }, 10000) // 10 second timeout
+
+    tokenClient.callback = async (response: any) => {
+      clearTimeout(timeoutId)
+      isRefreshing = false
+      refreshPromise = null
+
+      if (response.error) {
+        // User needs to re-authenticate
+        console.log("Silent refresh failed:", response.error)
+        resolve(null)
+        return
+      }
+
+      try {
+        // Set access token before any authenticated requests
+        setAccessToken(response.access_token)
+
+        const config: GoogleDriveConfig = {
+          accessToken: response.access_token,
+          expiresAt: Date.now() + (response.expires_in || 3600) * 1000,
+          email: currentConfig.email,
+          fileId: currentConfig.fileId,
+        }
+
+        resolve(config)
+      } catch (error) {
+        console.error("Error processing refreshed token:", error)
+        resolve(null)
+      }
+    }
+
+    // Try silent refresh (empty prompt means no popup if possible)
+    try {
+      tokenClient.requestAccessToken({ prompt: "" })
+    } catch (error) {
+      clearTimeout(timeoutId)
+      isRefreshing = false
+      refreshPromise = null
+      console.error("Silent refresh request failed:", error)
+      resolve(null)
+    }
+  })
+
+  return refreshPromise
 }
 
 // Find or create backup file in Google Drive
@@ -225,10 +329,34 @@ async function getOrCreateBackupFile(config: GoogleDriveConfig): Promise<string>
   return file.result.id!
 }
 
+// Custom error class for better error handling
+export class GoogleDriveError extends Error {
+  code: "OFFLINE" | "TOKEN_EXPIRED" | "NETWORK_ERROR" | "API_ERROR" | "NOT_FOUND"
+
+  constructor(
+    message: string,
+    code: "OFFLINE" | "TOKEN_EXPIRED" | "NETWORK_ERROR" | "API_ERROR" | "NOT_FOUND"
+  ) {
+    super(message)
+    this.name = "GoogleDriveError"
+    this.code = code
+  }
+}
+
 // Upload data to Google Drive
 export async function uploadToGoogleDrive(config: GoogleDriveConfig, data: AppData): Promise<string> {
+  if (!isOnline()) {
+    throw new GoogleDriveError(
+      "You're offline. Sync will resume when you're back online.",
+      "OFFLINE"
+    )
+  }
+
   if (isTokenExpired(config)) {
-    throw new Error("Access token expired. Please reconnect Google Drive.")
+    throw new GoogleDriveError(
+      "Access token expired. Please reconnect Google Drive.",
+      "TOKEN_EXPIRED"
+    )
   }
 
   await ensureAuthenticated(config)
@@ -236,23 +364,52 @@ export async function uploadToGoogleDrive(config: GoogleDriveConfig, data: AppDa
   const fileId = config.fileId || (await getOrCreateBackupFile(config))
   const content = JSON.stringify(data, null, 2)
 
-  // Update file content
-  await gapi.client.request({
-    path: `/upload/drive/v3/files/${fileId}`,
-    method: "PATCH",
-    params: {
-      uploadType: "media",
-    },
-    body: content,
-  })
+  try {
+    // Update file content
+    await gapi.client.request({
+      path: `/upload/drive/v3/files/${fileId}`,
+      method: "PATCH",
+      params: {
+        uploadType: "media",
+      },
+      body: content,
+    })
 
-  return fileId
+    return fileId
+  } catch (error: any) {
+    if (error.status === 401 || error.status === 403) {
+      throw new GoogleDriveError(
+        "Access token expired. Please reconnect Google Drive.",
+        "TOKEN_EXPIRED"
+      )
+    }
+    if (error.status === 404) {
+      throw new GoogleDriveError(
+        "Backup file not found. Please try syncing again.",
+        "NOT_FOUND"
+      )
+    }
+    throw new GoogleDriveError(
+      error.message || "Failed to upload to Google Drive",
+      "API_ERROR"
+    )
+  }
 }
 
 // Download data from Google Drive
 export async function downloadFromGoogleDrive(config: GoogleDriveConfig): Promise<AppData | null> {
+  if (!isOnline()) {
+    throw new GoogleDriveError(
+      "You're offline. Sync will resume when you're back online.",
+      "OFFLINE"
+    )
+  }
+
   if (isTokenExpired(config)) {
-    throw new Error("Access token expired. Please reconnect Google Drive.")
+    throw new GoogleDriveError(
+      "Access token expired. Please reconnect Google Drive.",
+      "TOKEN_EXPIRED"
+    )
   }
 
   await ensureAuthenticated(config)
@@ -270,7 +427,16 @@ export async function downloadFromGoogleDrive(config: GoogleDriveConfig): Promis
     if (error.status === 404) {
       return null // File doesn't exist yet
     }
-    throw error
+    if (error.status === 401 || error.status === 403) {
+      throw new GoogleDriveError(
+        "Access token expired. Please reconnect Google Drive.",
+        "TOKEN_EXPIRED"
+      )
+    }
+    throw new GoogleDriveError(
+      error.message || "Failed to download from Google Drive",
+      "API_ERROR"
+    )
   }
 }
 
@@ -279,8 +445,18 @@ export async function syncWithGoogleDrive(
   config: GoogleDriveConfig,
   localData: AppData,
 ): Promise<{ data: AppData; fileId: string }> {
+  if (!isOnline()) {
+    throw new GoogleDriveError(
+      "You're offline. Sync will resume when you're back online.",
+      "OFFLINE"
+    )
+  }
+
   if (isTokenExpired(config)) {
-    throw new Error("Access token expired. Please reconnect Google Drive.")
+    throw new GoogleDriveError(
+      "Access token expired. Please reconnect Google Drive.",
+      "TOKEN_EXPIRED"
+    )
   }
 
   const remoteData = await downloadFromGoogleDrive(config)
