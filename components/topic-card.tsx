@@ -18,7 +18,7 @@ interface TopicCardProps {
 
 export const TopicCard = memo(function TopicCard({ topic, qaCount, snippetCount, onEdit, onDelete }: TopicCardProps) {
   return (
-    <Card className="group relative overflow-hidden transition-all hover:shadow-md">
+    <Card className="group relative overflow-hidden transition-all duration-200 ease-out hover:shadow-lg hover:border-primary/20">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -37,11 +37,11 @@ export const TopicCard = memo(function TopicCard({ topic, qaCount, snippetCount,
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEdit}>
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onEdit(); }}>
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onDelete} className="text-destructive">
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onDelete(); }} variant="destructive">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>

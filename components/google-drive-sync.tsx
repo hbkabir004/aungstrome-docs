@@ -49,6 +49,13 @@ export function GoogleDriveSync() {
     setSyncIntervalState(settings.syncInterval)
   }, [])
 
+  // Sync hook's interval with local state when it changes elsewhere
+  useEffect(() => {
+    const settings = getSettings()
+    setSyncIntervalState(settings.syncInterval)
+    setAutoSync(settings.autoSync)
+  }, [config])
+
   // Update last sync text periodically
   useEffect(() => {
     const updateLastSyncText = () => {
@@ -230,54 +237,44 @@ export function GoogleDriveSync() {
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+              <p className="text-sm font-medium">Backup & sync</p>
               <Button
                 onClick={sync}
                 disabled={syncStatus.isSyncing || isOffline || needsReconnect}
-                className="w-full bg-transparent"
-                variant="outline"
+                className="w-full"
+                variant="default"
               >
                 <RefreshCw className={`mr-2 h-4 w-4 ${syncStatus.isSyncing ? "animate-spin" : ""}`} />
-                {syncStatus.isSyncing ? "Syncing..." : isOffline ? "Offline" : "Sync Now"}
+                {syncStatus.isSyncing ? "Syncing..." : isOffline ? "Offline" : "Sync now"}
               </Button>
 
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   onClick={uploadBackup}
                   disabled={syncStatus.isSyncing || isOffline || needsReconnect}
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
+                  className="gap-1.5"
                 >
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload Backup
+                  <Upload className="h-4 w-4 shrink-0" />
+                  Upload backup
                 </Button>
                 <Button
                   onClick={restoreBackup}
                   disabled={syncStatus.isSyncing || isOffline || needsReconnect}
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
+                  className="gap-1.5"
                 >
-                  <Download className="mr-2 h-4 w-4" />
-                  Restore Backup
+                  <Download className="h-4 w-4 shrink-0" />
+                  Restore backup
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                <strong>Sync</strong> merges local and cloud. <strong>Upload</strong> overwrites cloud with local. <strong>Restore</strong> replaces local with cloud.
+              </p>
             </div>
-
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>How Sync Works</AlertTitle>
-              <AlertDescription className="text-xs space-y-1">
-                <p>
-                  <strong>Sync:</strong> Merges local and cloud data, keeping the latest version of each item
-                </p>
-                <p>
-                  <strong>Upload:</strong> Overwrites cloud backup with your current local data
-                </p>
-                <p>
-                  <strong>Restore:</strong> Replaces local data with cloud backup
-                </p>
-              </AlertDescription>
-            </Alert>
           </>
         )}
       </CardContent>

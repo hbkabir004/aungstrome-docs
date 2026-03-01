@@ -48,14 +48,15 @@ export function SnippetViewer({ snippet, onClose, onEdit }: SnippetViewerProps) 
             </div>
             {snippet.description && <p className="text-muted-foreground">{snippet.description}</p>}
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="icon" onClick={handleCopy}>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" size="icon" onClick={handleCopy} title="Copy code">
               <Copy className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" onClick={onEdit}>
+            <Button variant="default" size="sm" className="gap-1.5" onClick={onEdit}>
               <Edit3 className="h-4 w-4" />
+              Edit
             </Button>
-            <Button variant="outline" size="icon" onClick={onClose}>
+            <Button variant="outline" size="icon" onClick={onClose} title="Close">
               <X className="h-4 w-4" />
             </Button>
           </div>

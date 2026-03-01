@@ -23,6 +23,8 @@ export interface QAItem {
   youtubeLink?: string
   youtubeTimestamp?: string // Format: "1:23" or "1:23:45"
   personalNotes?: string // Markdown
+  /** Snippet IDs to show as runnable examples inside this Q&A (same topic) */
+  linkedSnippetIds?: string[]
   createdAt: number
   updatedAt: number
 }

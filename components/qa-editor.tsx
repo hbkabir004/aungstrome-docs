@@ -1,9 +1,11 @@
 "use client"
 
 import type { Difficulty, QAItem } from "@/lib/types"
-import { Eye, X, Youtube } from "lucide-react"
+import { Code2, Eye, X, Youtube } from "lucide-react"
 import { useEffect, useState } from "react"
+import { useSnippets } from "@/hooks/use-data"
 import { MarkdownRenderer } from "./markdown-renderer"
+import { Checkbox } from "./ui/checkbox"
 import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
@@ -15,7 +17,7 @@ import { Textarea } from "./ui/textarea"
 interface QAEditorProps {
   item?: QAItem
   topicId: string
-  onSave: (item: QAItem) => void
+  onSave: (item: QAItem) => void | Promise<void>
   onCancel: () => void
 }
 
@@ -29,7 +31,10 @@ export function QAEditor({ item, topicId, onSave, onCancel }: QAEditorProps) {
   const [youtubeLink, setYoutubeLink] = useState("")
   const [youtubeTimestamp, setYoutubeTimestamp] = useState("")
   const [personalNotes, setPersonalNotes] = useState("")
+  const [linkedSnippetIds, setLinkedSnippetIds] = useState<string[]>([])
   const [activeTab, setActiveTab] = useState<"question" | "answer" | "notes">("question")
+  const [saving, setSaving] = useState(false)
+  const { snippets: topicSnippets } = useSnippets(topicId)
 
   useEffect(() => {
     if (item) {
@@ -41,6 +46,9 @@ export function QAEditor({ item, topicId, onSave, onCancel }: QAEditorProps) {
       setYoutubeLink(item.youtubeLink || "")
       setYoutubeTimestamp(item.youtubeTimestamp || "")
       setPersonalNotes(item.personalNotes || "")
+      setLinkedSnippetIds(item.linkedSnippetIds ?? [])
+    } else {
+      setLinkedSnippetIds([])
     }
   }, [item])
 
@@ -55,7 +63,7 @@ export function QAEditor({ item, topicId, onSave, onCancel }: QAEditorProps) {
     setTags(tags.filter((t) => t !== tag))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const now = Date.now()
     const savedItem: QAItem = {
       id: item?.id || `qa-${now}`,
@@ -68,10 +76,19 @@ export function QAEditor({ item, topicId, onSave, onCancel }: QAEditorProps) {
       youtubeLink: youtubeLink || undefined,
       youtubeTimestamp: youtubeTimestamp || undefined,
       personalNotes: personalNotes || undefined,
+      linkedSnippetIds: linkedSnippetIds.length > 0 ? linkedSnippetIds : undefined,
       createdAt: item?.createdAt || now,
       updatedAt: now,
     }
-    onSave(savedItem)
+    setSaving(true)
+    try {
+      const result = onSave(savedItem)
+      if (result && typeof (result as Promise<void>).then === "function") {
+        await (result as Promise<void>)
+      }
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -84,8 +101,8 @@ export function QAEditor({ item, topicId, onSave, onCancel }: QAEditorProps) {
             <Button variant="outline" onClick={onCancel}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={!title.trim() || !question.trim() || !answer.trim()}>
-              Save
+            <Button onClick={handleSave} disabled={!title.trim() || !question.trim() || !answer.trim() || saving}>
+              {saving ? "Saving…" : "Save"}
             </Button>
           </div>
         </div>
@@ -181,6 +198,34 @@ export function QAEditor({ item, topicId, onSave, onCancel }: QAEditorProps) {
               </div>
             )}
 
+            {/* Code examples from this topic – show in this Q&A */}
+            {topicSnippets.length > 0 && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Code2 className="h-4 w-4" />
+                  Code examples in this Q&A
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Select which snippets to show when viewing this Q&A. If none selected, all snippets from this topic are shown.
+                </p>
+                <div className="flex flex-wrap gap-4 rounded-lg border bg-muted/30 p-3">
+                  {topicSnippets.map((snippet) => (
+                    <label key={snippet.id} className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox
+                        checked={linkedSnippetIds.includes(snippet.id)}
+                        onCheckedChange={(checked) => {
+                          setLinkedSnippetIds((prev) =>
+                            checked ? [...prev, snippet.id] : prev.filter((id) => id !== snippet.id)
+                          )
+                        }}
+                      />
+                      <span className="text-sm font-medium">{snippet.title}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Markdown Editors */}
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
               <TabsList className="grid w-full grid-cols-3">
@@ -236,9 +281,9 @@ export function QAEditor({ item, topicId, onSave, onCancel }: QAEditorProps) {
               </div>
 
               <div className="rounded-lg border bg-card p-6 space-y-6">
-                {activeTab === "question" && question && <MarkdownRenderer content={question} />}
-                {activeTab === "answer" && answer && <MarkdownRenderer content={answer} />}
-                {activeTab === "notes" && personalNotes && <MarkdownRenderer content={personalNotes} />}
+                {activeTab === "question" && question && <MarkdownRenderer content={question} runnableCodeBlocks />}
+                {activeTab === "answer" && answer && <MarkdownRenderer content={answer} runnableCodeBlocks />}
+                {activeTab === "notes" && personalNotes && <MarkdownRenderer content={personalNotes} runnableCodeBlocks={false} />}
                 {((activeTab === "question" && !question) ||
                   (activeTab === "answer" && !answer) ||
                   (activeTab === "notes" && !personalNotes)) && (

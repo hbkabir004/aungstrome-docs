@@ -17,7 +17,7 @@ import { Textarea } from "./ui/textarea"
 interface SnippetEditorProps {
   snippet?: Snippet
   topicId: string
-  onSave: (snippet: Snippet) => void
+  onSave: (snippet: Snippet) => void | Promise<void>
   onCancel: () => void
 }
 
@@ -31,6 +31,7 @@ export function SnippetEditor({ snippet, topicId, onSave, onCancel }: SnippetEdi
   const [tagInput, setTagInput] = useState("")
   const [showPreview, setShowPreview] = useState(true)
   const [showRevisions, setShowRevisions] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (snippet) {
@@ -53,7 +54,7 @@ export function SnippetEditor({ snippet, topicId, onSave, onCancel }: SnippetEdi
     setTags(tags.filter((t) => t !== tag))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const now = Date.now()
 
     // Create new revision if code changed
@@ -78,7 +79,15 @@ export function SnippetEditor({ snippet, topicId, onSave, onCancel }: SnippetEdi
       createdAt: snippet?.createdAt || now,
       updatedAt: now,
     }
-    onSave(savedSnippet)
+    setSaving(true)
+    try {
+      const result = onSave(savedSnippet)
+      if (result && typeof (result as Promise<void>).then === "function") {
+        await (result as Promise<void>)
+      }
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleCopyCode = async () => {
@@ -114,8 +123,8 @@ export function SnippetEditor({ snippet, topicId, onSave, onCancel }: SnippetEdi
             <Button variant="outline" onClick={onCancel}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={!title.trim() || !code.trim()}>
-              Save
+            <Button onClick={handleSave} disabled={!title.trim() || !code.trim() || saving}>
+              {saving ? "Saving…" : "Save"}
             </Button>
           </div>
         </div>

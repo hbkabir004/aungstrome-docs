@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
-import type React from "react"
 import dynamic from "next/dynamic"
+import type React from "react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
@@ -21,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton"
 import { useQAItems, useSnippets, useTopics } from "@/hooks/use-data"
 import { useToast } from "@/hooks/use-toast"
+import { addFlexboxDemoContent } from "@/lib/flexbox-demo-content"
 import { clearAllData, exportData, getStorageBackend, importData, setStorageBackend } from "@/lib/storage"
 import type { StorageBackend } from "@/lib/types"
 import { AlertCircle, CheckCircle2, Database, Download, Github, Trash2, Upload } from "lucide-react"
@@ -55,6 +57,7 @@ export default function SettingsPage() {
   const [showClearDialog, setShowClearDialog] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
+  const [isAddingFlexboxDemo, setIsAddingFlexboxDemo] = useState(false)
 
   const handleExport = useCallback(async () => {
     try {
@@ -134,6 +137,37 @@ export default function SettingsPage() {
         description: "Failed to clear data. Please try again.",
         variant: "destructive",
       })
+    }
+  }, [toast, refreshTopics, refreshQA, refreshSnippets])
+
+  const handleAddFlexboxDemo = useCallback(async () => {
+    try {
+      setIsAddingFlexboxDemo(true)
+      const { addedQA, addedSnippet } = await addFlexboxDemoContent()
+      await Promise.all([refreshTopics(), refreshQA(), refreshSnippets()])
+      if (addedQA || addedSnippet) {
+        toast({
+          title: "Flexbox demo added",
+          description: addedQA && addedSnippet
+            ? "Q&A and HTML snippet added under CSS Basics."
+            : addedQA
+              ? "Q&A added and linked to existing Flexbox snippet."
+              : "Snippet added; Q&A already existed.",
+        })
+      } else {
+        toast({
+          title: "Already added",
+          description: "Flexbox Centering Q&A and snippet are already in CSS Basics.",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to add demo",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsAddingFlexboxDemo(false)
     }
   }, [toast, refreshTopics, refreshQA, refreshSnippets])
 

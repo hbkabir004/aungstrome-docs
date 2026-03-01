@@ -22,23 +22,39 @@ interface SnippetCardProps {
 export const SnippetCard = memo(function SnippetCard({ snippet, onEdit, onDelete, onClick }: SnippetCardProps) {
   const { toast } = useToast()
 
-  const handleCopy = async (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const doCopy = useCallback(async () => {
     await navigator.clipboard.writeText(snippet.code)
     toast({
       title: "Copied to clipboard",
       description: "Code snippet copied successfully",
     })
+  }, [snippet.code, toast])
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    doCopy()
+  }
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onEdit()
+  }
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onDelete()
   }
 
   return (
-    <Card className="group cursor-pointer transition-all hover:shadow-md" onClick={onClick}>
+    <Card className="group cursor-pointer transition-all duration-200 ease-out hover:shadow-lg hover:border-primary/20" onClick={onClick}>
       <CardHeader>
         <div className="flex items-start justify-between">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              <Code2 className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">{snippet.title}</CardTitle>
+              <Code2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <CardTitle className="text-base truncate">{snippet.title}</CardTitle>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
               <LanguageBadge language={snippet.language} />
@@ -57,31 +73,20 @@ export const SnippetCard = memo(function SnippetCard({ snippet, onEdit, onDelete
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleCopy}>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onSelect={() => doCopy()}>
                 <Copy className="mr-2 h-4 w-4" />
                 Copy Code
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onEdit()
-                }}
-              >
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onEdit(); }}>
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDelete()
-                }}
-                className="text-destructive"
-              >
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onDelete(); }} variant="destructive">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
@@ -89,11 +94,17 @@ export const SnippetCard = memo(function SnippetCard({ snippet, onEdit, onDelete
           </DropdownMenu>
         </div>
       </CardHeader>
-      <CardContent>
-        {snippet.description && <p className="text-sm text-muted-foreground mb-3">{snippet.description}</p>}
-        <pre className="text-xs bg-muted p-3 rounded overflow-hidden">
+      <CardContent className="space-y-3">
+        {snippet.description && <p className="text-sm text-muted-foreground mb-2">{snippet.description}</p>}
+        <pre className="text-xs bg-muted p-3 rounded-lg overflow-hidden">
           <code className="line-clamp-3">{snippet.code}</code>
         </pre>
+        <div className="flex gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
+          <Button variant="secondary" size="sm" className="flex-1 gap-1.5" onClick={handleEdit}>
+            <Pencil className="h-3.5 w-3.5" />
+            Edit
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )

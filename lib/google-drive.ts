@@ -407,7 +407,7 @@ export class GoogleDriveError extends Error {
   }
 }
 
-// Upload data to Google Drive
+// Upload data to Google Drive (use fetch for raw body - gapi can serialize body incorrectly)
 export async function uploadToGoogleDrive(config: GoogleDriveConfig, data: AppData): Promise<string> {
   if (!isOnline()) {
     throw new GoogleDriveError(
@@ -429,30 +429,41 @@ export async function uploadToGoogleDrive(config: GoogleDriveConfig, data: AppDa
   const content = JSON.stringify(data, null, 2)
 
   try {
-    // Update file content
-    await gapi.client.request({
-      path: `/upload/drive/v3/files/${fileId}`,
-      method: "PATCH",
-      params: {
-        uploadType: "media",
-      },
-      body: content,
-    })
+    const res = await fetch(
+      `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`,
+      {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${config.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: content,
+      }
+    )
+
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        throw new GoogleDriveError(
+          "Access token expired. Please reconnect Google Drive.",
+          "TOKEN_EXPIRED"
+        )
+      }
+      if (res.status === 404) {
+        throw new GoogleDriveError(
+          "Backup file not found. Please try syncing again.",
+          "NOT_FOUND"
+        )
+      }
+      const errText = await res.text()
+      throw new GoogleDriveError(
+        errText || `Upload failed (${res.status})`,
+        "API_ERROR"
+      )
+    }
 
     return fileId
   } catch (error: any) {
-    if (error.status === 401 || error.status === 403) {
-      throw new GoogleDriveError(
-        "Access token expired. Please reconnect Google Drive.",
-        "TOKEN_EXPIRED"
-      )
-    }
-    if (error.status === 404) {
-      throw new GoogleDriveError(
-        "Backup file not found. Please try syncing again.",
-        "NOT_FOUND"
-      )
-    }
+    if (error instanceof GoogleDriveError) throw error
     throw new GoogleDriveError(
       error.message || "Failed to upload to Google Drive",
       "API_ERROR"
@@ -564,8 +575,12 @@ function mergeByLatest<T extends { id: string; updatedAt: number }>(local: T[], 
 
 // Disconnect Google Drive
 export function disconnectGoogleDrive() {
-  if (gapi.client.getToken()) {
-    gapi.client.setToken(null)
+  try {
+    if (typeof window !== "undefined" && window.gapi?.client?.getToken()) {
+      window.gapi.client.setToken(null)
+    }
+  } catch {
+    // gapi may not be loaded yet
   }
 }
 
