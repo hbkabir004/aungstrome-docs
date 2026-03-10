@@ -1,367 +1,475 @@
-# Aungstrome Docs - Interview Preparation App
+# 🚀 Aungstrome Docs — Interview Preparation App
 
-A personal documentation app for interview preparation built with Next.js, TypeScript, and Tailwind CSS. Store Q&A items, code snippets with interactive previews, and organize everything by topics—all running entirely in your browser with offline support.
+A **personal documentation app** designed for structured **interview preparation**.
+Built with **Next.js, TypeScript, and Tailwind CSS**, it allows you to organize knowledge, store Q&A, test code snippets with live previews, and keep everything **offline-first inside your browser**.
 
-## Features
+💡 Perfect for developers preparing for technical interviews.
 
-### Core Functionality
-- **Topics Organization**: Create topics to categorize your interview preparation materials
-- **Q&A Management**: Store questions and answers with Markdown support
-  - Difficulty levels (Easy, Medium, Hard)
-  - Tags for organization
-  - YouTube video links with timestamps
-  - Personal notes section
-- **Code Snippets**: Save and preview code with interactive execution
-  - Support for React TSX/JSX, JavaScript, HTML, CSS, and CSS-in-JS
-  - Interactive previews using Sandpack for React components
-  - Revision history (up to 50 revisions per snippet)
-  - Copy to clipboard functionality
-- **Advanced Search**: Fuzzy search across all content using Fuse.js
-  - Filter by topic, type, difficulty, and language
-  - Sort by relevance, date, or alphabetically
-- **Data Management**: 
-  - Export/import data as JSON
-  - Switch between IndexedDB and LocalStorage
-  - Clear all data option
-  - **Google Drive Sync**: Automatic backup and synchronization to your personal Google Drive
+---
 
-### Technical Features
-- **Offline-First**: PWA with service worker for offline access
-- **Client-Side Storage**: IndexedDB (default) or LocalStorage
-- **Cloud Backup**: Secure Google Drive integration with OAuth 2.0
-- **Dark/Light Theme**: System-aware theme with manual toggle
-- **Responsive Design**: Works on desktop and mobile devices
-- **Markdown Rendering**: Full GitHub Flavored Markdown support with syntax highlighting
-- **Interactive Code Previews**: Sandboxed React component execution
+# ✨ Features
 
-## Getting Started
+## 📚 Core Functionality
 
-### Prerequisites
-- Node.js 18+ or compatible package manager (npm, yarn, pnpm)
-- (Optional) Google Cloud Project for Google Drive sync
+### 🗂 Topics Organization
 
-### Installation
+* Create topics to categorize interview materials
+* Easily organize knowledge by subject
 
-1. Clone or download this project
-2. Install dependencies:
+### ❓ Q&A Management
 
-\`\`\`bash
+Store interview questions and answers with **Markdown support**
+
+Features include:
+
+* Difficulty levels → `Easy / Medium / Hard`
+* Tags for organization
+* YouTube video links with timestamps
+* Personal notes section
+* Live Markdown preview
+
+---
+
+### 💻 Code Snippets
+
+Save and test code directly inside the app.
+
+Supported languages:
+
+* React (TSX / JSX)
+* JavaScript
+* HTML
+* CSS
+* CSS-in-JS
+
+Features:
+
+* ⚡ Interactive previews using **Sandpack**
+* 🕘 Revision history (up to **50 revisions**)
+* 📋 Copy-to-clipboard support
+* 🧪 Safe sandbox execution
+
+---
+
+### 🔎 Advanced Search
+
+Search across your entire knowledge base.
+
+Powered by **Fuse.js fuzzy search**
+
+Filters include:
+
+* Topic
+* Type (Q&A / Snippet)
+* Difficulty
+* Language
+
+Sorting options:
+
+* Relevance
+* Date
+* Alphabetical
+
+---
+
+### 💾 Data Management
+
+Manage your data with built-in tools.
+
+Features:
+
+* Export / Import as **JSON**
+* Switch between **IndexedDB** and **LocalStorage**
+* Clear all stored data
+* ☁ **Google Drive Sync**
+
+Google Drive sync allows:
+
+* Automatic backups
+* Cross-device data synchronization
+
+---
+
+# ⚙ Technical Features
+
+* ⚡ **Offline-First PWA**
+* 💾 Client-side storage (IndexedDB / LocalStorage)
+* ☁ Google Drive cloud backup
+* 🌙 Dark / Light theme support
+* 📱 Fully responsive design
+* 📝 GitHub-flavored Markdown
+* 🧪 Interactive code previews
+
+---
+
+# 🏁 Getting Started
+
+## 📦 Prerequisites
+
+* Node.js **18+**
+* npm / yarn / pnpm
+
+Optional:
+
+* Google Cloud Project (for Drive sync)
+
+---
+
+# 📥 Installation
+
+```bash
+git clone <your-repository-url>
+
+cd aungstrome-docs
+
 npm install
 # or
 yarn install
 # or
 pnpm install
-\`\`\`
+```
 
-3. (Optional) Configure Google Drive API:
-   - Copy `.env.local.example` to `.env.local`
-   - Follow the Google Drive Setup section below
-   - Add your credentials to `.env.local`
+Run the development server:
 
-4. Run the development server:
-
-\`\`\`bash
+```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-\`\`\`
+```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
+Open:
 
-### Google Drive Setup (Optional)
+```
+http://localhost:3000
+```
 
-To enable Google Drive sync:
+---
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select an existing one
-3. Enable the Google Drive API:
-   - Navigate to "APIs & Services" → "Library"
-   - Search for "Google Drive API"
-   - Click "Enable"
-4. Create OAuth 2.0 credentials:
-   - Go to "APIs & Services" → "Credentials"
-   - Click "Create Credentials" → "OAuth client ID"
-   - Choose "Web application"
-   - Add authorized JavaScript origins:
-     - `http://localhost:3000` (development)
-     - Your production URL (e.g., `https://yourdomain.com`)
-   - Add authorized redirect URIs (same as origins)
-   - Click "Create"
-5. Create an API Key:
-   - Click "Create Credentials" → "API Key"
-   - (Optional) Restrict the key to Google Drive API
-6. Copy credentials to `.env.local`:
-   \`\`\`
-   NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
-   NEXT_PUBLIC_GOOGLE_API_KEY=your_api_key
-   \`\`\`
+# ☁ Google Drive Setup (Optional)
 
-### Building for Production
+To enable **cloud backup and sync**:
 
-\`\`\`bash
+### 1️⃣ Create a Google Cloud Project
+
+Go to:
+
+```
+https://console.cloud.google.com
+```
+
+Create a new project.
+
+---
+
+### 2️⃣ Enable Google Drive API
+
+Navigate to:
+
+```
+APIs & Services → Library
+```
+
+Search for:
+
+```
+Google Drive API
+```
+
+Click **Enable**.
+
+---
+
+### 3️⃣ Create OAuth Credentials
+
+Go to:
+
+```
+APIs & Services → Credentials
+```
+
+Create:
+
+```
+OAuth Client ID
+```
+
+Type:
+
+```
+Web Application
+```
+
+Add authorized origins:
+
+```
+http://localhost:3000
+https://yourdomain.com
+```
+
+---
+
+### 4️⃣ Create an API Key
+
+Create:
+
+```
+API Key
+```
+
+(Optional) Restrict to **Google Drive API**.
+
+---
+
+### 5️⃣ Configure Environment Variables
+
+Create `.env.local`
+
+```env
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_client_id
+NEXT_PUBLIC_GOOGLE_API_KEY=your_api_key
+```
+
+---
+
+# 🏗 Building for Production
+
+```bash
 npm run build
 npm start
-\`\`\`
+```
 
-## Deployment
+---
 
-### Vercel (Recommended)
+# 🚀 Deployment
 
-1. Push your code to GitHub
-2. Import the project in [Vercel](https://vercel.com)
-3. Add environment variables in project settings:
-   - `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
-   - `NEXT_PUBLIC_GOOGLE_API_KEY`
-4. Deploy with default settings
+## Recommended: Vercel
 
-### Other Platforms
+1. Push project to GitHub
+2. Import project into **Vercel**
+3. Add environment variables
+4. Deploy
 
-This is a standard Next.js app and can be deployed to any platform that supports Next.js:
-- Netlify
-- Railway
-- Render
-- Self-hosted with Node.js
+---
 
-**Important:** Add the production URL to Google Cloud Console authorized origins and redirect URIs.
+## Other Platforms
 
-## Usage Guide
+You can deploy to:
 
-### Creating Topics
+* Netlify
+* Railway
+* Render
+* Self-hosted Node.js server
 
-1. Click "New Topic" on the home page
-2. Enter a name and optional description
-3. Topics help organize your Q&A items and snippets
+⚠ Make sure to add your **production URL** to Google OAuth settings.
 
-### Adding Q&A Items
+---
 
-1. Navigate to a topic and click "New Q&A"
-2. Fill in the title, question, and answer using Markdown
-3. Set difficulty level and add tags
-4. Optionally add YouTube links and personal notes
-5. Use the live preview to see formatted content
+# 📖 Usage Guide
 
-### Creating Code Snippets
+## 🗂 Creating Topics
 
-1. Navigate to a topic and click "New Snippet"
-2. Choose the language/format
-3. Paste or write your code
-4. For React TSX/JSX, see live interactive preview
-5. Revisions are automatically saved when you edit
+1. Click **New Topic**
+2. Enter name + description
+3. Organize interview materials by topic
 
-### Searching
+---
 
-1. Use the Search page to find content across all topics
-2. Apply filters for topic, type, difficulty, or language
-3. Sort results by relevance, date, or alphabetically
+## ❓ Adding Q&A
 
-### Google Drive Sync
+1. Open a topic
+2. Click **New Q&A**
+3. Write question and answer
+4. Add tags and difficulty
 
-**Connecting:**
-1. Go to Settings → Google Drive Sync
-2. Click "Connect Google Drive"
-3. Sign in with your Google account
-4. Grant permissions (only accesses the backup file)
-5. Initial sync will merge local and cloud data
+Markdown preview is available.
 
-**Automatic Sync:**
-1. Enable "Automatic Sync" toggle
-2. Choose sync interval (15 min to 6 hours)
-3. Data syncs automatically in the background
+---
 
-**Manual Operations:**
-- **Sync Now**: Merges local and cloud data, keeping latest versions
-- **Upload Backup**: Overwrites cloud with current local data
-- **Restore Backup**: Replaces local data with cloud backup
+## 💻 Creating Code Snippets
 
-**How Sync Works:**
-- Merge strategy: Keeps items with latest `updatedAt` timestamp
-- Conflict resolution: Automatic based on modification time
-- Privacy: Data stored in your personal Google Drive only
-- Security: OAuth 2.0 authentication, no third-party access
+1. Open a topic
+2. Click **New Snippet**
+3. Select language
+4. Write or paste code
 
-**Disconnecting:**
-1. Click the disconnect icon
-2. Confirm disconnection
-3. Local data remains intact
-4. Cloud backup remains in your Google Drive
+React snippets show **live previews** automatically.
 
-### Import/Export
+---
 
-**Export:**
-1. Go to Settings
-2. Click "Export Data (JSON)"
-3. Save the JSON file as backup
+## 🔎 Searching Content
 
-**Import:**
-1. Go to Settings
-2. Click "Import Data (JSON)"
-3. Select your backup JSON file
-4. Data will be merged with existing content
+Go to **Search page**.
 
-### Storage Backend
+Apply filters:
 
-**IndexedDB (Default):**
-- Better performance
-- Larger storage capacity
-- Recommended for most users
+* Topic
+* Type
+* Difficulty
+* Language
 
-**LocalStorage (Fallback):**
-- Simpler implementation
-- Size limitations (~5-10MB)
-- Useful for debugging or compatibility
+Sort results by relevance or date.
 
-Change in Settings → Storage Backend
+---
 
-## Architecture
+# ☁ Google Drive Sync
 
-### Project Structure
+## 🔗 Connecting
 
-\`\`\`
-aungstrome-docs/
-├── app/                      # Next.js App Router pages
-│   ├── page.tsx             # Home page with topics
-│   ├── search/              # Search page
-│   ├── settings/            # Settings page
-│   ├── snippets/            # All snippets view
-│   └── topics/[topicId]/    # Topic-specific pages
-│       ├── qa/              # Q&A items for topic
-│       └── snippets/        # Snippets for topic
-├── components/              # React components
-│   ├── ui/                  # shadcn/ui components
-│   ├── theme-provider.tsx   # Theme management
-│   ├── nav-header.tsx       # Navigation
-│   ├── qa-*.tsx            # Q&A components
-│   ├── snippet-*.tsx       # Snippet components
-│   ├── google-drive-sync.tsx # Google Drive UI
-│   └── markdown-renderer.tsx
-├── lib/                     # Core logic
-│   ├── types.ts            # TypeScript types
-│   ├── storage/            # Storage implementations
-│   │   ├── indexeddb.ts   # IndexedDB wrapper
-│   │   ├── localstorage.ts # LocalStorage wrapper
-│   │   ├── settings.ts    # Settings storage
-│   │   └── index.ts       # Storage abstraction
-│   ├── google-drive.ts     # Google Drive API integration
-│   ├── search.ts           # Fuse.js search logic
-│   ├── seed-data.ts        # Initial sample data
-│   └── init-data.ts        # Data initialization
-├── hooks/                   # Custom React hooks
-│   ├── use-data.ts         # SWR data fetching hooks
-│   └── use-google-drive-sync.ts # Google Drive sync hook
-└── public/                  # Static assets
-    ├── manifest.json        # PWA manifest
-    └── icons/              # App icons
-\`\`\`
+```
+Settings → Google Drive Sync → Connect
+```
 
-### Key Technologies
+Then sign in with your Google account.
 
-- **Next.js 15**: React framework with App Router
-- **TypeScript**: Type-safe development
-- **Tailwind CSS v4**: Utility-first styling
-- **IndexedDB (idb)**: Client-side database
-- **Google Drive API**: Cloud backup and sync
-- **Fuse.js**: Fuzzy search
-- **Sandpack**: Interactive code previews
-- **react-markdown**: Markdown rendering
-- **rehype-highlight**: Syntax highlighting
-- **SWR**: Data fetching and caching
-- **next-pwa**: Progressive Web App support
+Initial sync will merge **local + cloud data**.
 
-## Security & Sandboxing
+---
 
-### Code Preview Security
+## 🔄 Automatic Sync
 
-**Sandpack (React TSX/JSX):**
-- Runs in isolated iframe with sandbox attributes
-- No network access by default
-- Limited to client-side browser APIs
-- Cannot access parent page or user data
+You can enable background sync.
 
-**Static Previews (HTML/CSS/JS):**
-- HTML is sanitized before rendering
-- No script execution for non-React code
-- Safe for viewing but not interactive
+Available intervals:
 
-### Data Security
+* 15 minutes
+* 30 minutes
+* 1 hour
+* 6 hours
 
-- All data stored locally in browser
-- No server-side storage or transmission
-- Export/import uses local file system only
-- No authentication required (single-user app)
+---
 
-### Google Drive Security
+## ⚙ Manual Sync Options
 
-- **OAuth 2.0**: Industry-standard authentication
-- **Scoped Access**: Only accesses the backup file created by the app
-- **No Third-Party Access**: Data never shared with external services
-- **Encrypted Storage**: Google Drive provides encryption at rest
-- **Token Management**: Access tokens stored locally, expire automatically
-- **Privacy First**: Your data remains in your personal Google Drive
+| Action         | Description                   |
+| -------------- | ----------------------------- |
+| Sync Now       | Merge local and cloud data    |
+| Upload Backup  | Replace cloud with local data |
+| Restore Backup | Replace local data with cloud |
 
-## Future Enhancements
+---
 
-### Planned Features
-- GitHub Gist sync for backup
-- Keyboard shortcuts (Cmd/Ctrl+K for search, etc.)
-- Drag-and-drop reordering
-- Bulk operations (delete multiple items)
-- Tag management UI
-- Deep linking to specific items
-- Export to PDF or Markdown
-- Conflict resolution UI for manual merge
+## 🔐 Security
 
-### Contributing
+* OAuth 2.0 authentication
+* Access limited to the backup file
+* Data stays in your **Google Drive**
+* No third-party storage
 
-This is a personal project template. Feel free to fork and customize for your needs.
+---
 
-## Troubleshooting
+# 🏗 Project Architecture
 
-**Data not persisting:**
-- Check browser storage settings
-- Try switching storage backend in Settings
-- Export data before clearing browser cache
+```
+aungstrome-docs
+│
+├── app
+│   ├── search
+│   ├── settings
+│   ├── snippets
+│   └── topics
+│
+├── components
+│   ├── ui
+│   ├── qa components
+│   └── snippet components
+│
+├── lib
+│   ├── storage
+│   ├── google-drive integration
+│   └── search logic
+│
+├── hooks
+│
+└── public
+```
 
-**Sandpack preview not working:**
-- Check browser console for errors
-- Ensure code is valid React/TypeScript
-- Try refreshing the page
+---
 
-**Import fails:**
-- Verify JSON file format matches export structure
-- Check for syntax errors in JSON
-- Ensure file contains topics, qaItems, and snippets arrays
+# 🧪 Key Technologies
 
-**Google Drive sync issues:**
-- Check if access token expired (reconnect if needed)
-- Verify environment variables are set correctly
-- Ensure Google Drive API is enabled in Cloud Console
-- Check authorized origins match your deployment URL
-- Look for errors in browser console
+| Technology      | Purpose               |
+| --------------- | --------------------- |
+| Next.js 15      | React Framework       |
+| TypeScript      | Type-safe development |
+| Tailwind CSS v4 | Styling               |
+| IndexedDB       | Client database       |
+| Fuse.js         | Fuzzy search          |
+| Sandpack        | Code preview          |
+| SWR             | Data caching          |
+| next-pwa        | Offline support       |
 
-**"Access token expired" error:**
-- Click disconnect and reconnect Google Drive
-- Tokens expire after ~1 hour for security
-- Reconnecting generates a new token
+---
 
-## Environment Variables
+# 🔐 Security & Sandboxing
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Optional | Google OAuth 2.0 Client ID for Drive sync |
-| `NEXT_PUBLIC_GOOGLE_API_KEY` | Optional | Google API Key for Drive API access |
+## Sandpack Security
 
-**Note:** Google Drive sync is optional. The app works fully without these variables.
+* Runs inside isolated iframe
+* No network access
+* Cannot access parent page
 
-## License
+---
 
-MIT License - feel free to use this project for personal or commercial purposes.
+## Data Security
 
-## Acknowledgments
+* All data stored **locally**
+* No server-side storage
+* Export / Import via files
 
-- Built with [v0](https://v0.dev) by Vercel
-- UI components from [shadcn/ui](https://ui.shadcn.com)
-- Code previews powered by [Sandpack](https://sandpack.codesandbox.io)
-- Icons from [Lucide](https://lucide.dev)
-- Google Drive API for cloud sync
+---
+
+# 🔮 Future Enhancements
+
+Planned features:
+
+* GitHub Gist sync
+* Keyboard shortcuts
+* Drag-and-drop reordering
+* Bulk operations
+* Tag management UI
+* Export to PDF / Markdown
+* Conflict resolution UI
+
+---
+
+# 🛠 Troubleshooting
+
+### Data not persisting
+
+* Check browser storage permissions
+* Switch storage backend
+* Export data before clearing cache
+
+---
+
+### Sandpack preview not working
+
+* Check browser console
+* Validate React code
+* Refresh page
+
+---
+
+### Google Drive sync issues
+
+* Reconnect if token expired
+* Verify environment variables
+* Check authorized origins
+
+---
+
+# 🌱 Environment Variables
+
+| Variable                     | Required | Description     |
+| ---------------------------- | -------- | --------------- |
+| NEXT_PUBLIC_GOOGLE_CLIENT_ID | Optional | OAuth Client ID |
+| NEXT_PUBLIC_GOOGLE_API_KEY   | Optional | Google API Key  |
+
+The app **works fully offline** without these variables.
+
+---
+
+# 📄 License
+
+MIT License
+Free for personal or commercial use.
+
+---
